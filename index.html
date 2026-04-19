@@ -572,13 +572,13 @@ function tempAngle(v) {
   // read as one coherent typeface rather than hand-drawn outliers.
   const GLYPH = {
     '-': 'M -2.3 0 L 2.3 0',
-    '0': 'M -2.5 -1.0 L -2.5 1.0 A 2.5 2.5 0 0 0 2.5 1.0 L 2.5 -1.0 A 2.5 2.5 0 0 0 -2.5 -1.0 Z',
-    '1': 'M -1.3 -2.3 L 0 -3.5 L 0 3.5',
-    '2': 'M -2.3 -2.3 Q -2.3 -3.5 -0.9 -3.5 L 0.9 -3.5 Q 2.3 -3.5 2.3 -2.3 Q 2.3 -1.0 1.2 0 L -2.3 2.3 L -2.3 3.5 L 2.3 3.5',
-    '3': 'M -2.3 -2.3 Q -2.3 -3.5 -0.9 -3.5 L 0.9 -3.5 Q 2.3 -3.5 2.3 -2.3 Q 2.3 -1.0 0.8 -0.2 L -0.2 -0.2 M -0.2 0.2 L 0.8 0.2 Q 2.3 1.0 2.3 2.3 Q 2.3 3.5 0.9 3.5 L -0.9 3.5 Q -2.3 3.5 -2.3 2.3'
+    '0': 'M -2.5 -4.5 L -2.5 4.5 A 2.5 2.5 0 0 0 2.5 4.5 L 2.5 -4.5 A 2.5 2.5 0 0 0 -2.5 -4.5 Z',
+    '1': 'M -1.3 -4.6 L 0 -7 L 0 7',
+    '2': 'M -2.3 -4.6 Q -2.3 -7 -0.9 -7 L 0.9 -7 Q 2.3 -7 2.3 -4.6 Q 2.3 -2.0 1.2 0 L -2.3 4.6 L -2.3 7 L 2.3 7',
+    '3': 'M -2.3 -4.6 Q -2.3 -7 -0.9 -7 L 0.9 -7 Q 2.3 -7 2.3 -4.6 Q 2.3 -2.0 0.8 -0.4 L -0.2 -0.4 M -0.2 0.4 L 0.8 0.4 Q 2.3 2.0 2.3 4.6 Q 2.3 7 0.9 7 L -0.9 7 Q -2.3 7 -2.3 4.6'
   };
   const CHAR_PITCH  = 7.5;   // horizontal distance between glyph centres
-  const GLYPH_STROKE = 2.0;  // thickness of the digits
+  const GLYPH_STROKE = 2.4;  // thickness of the digits
 
   // Ticks RADIATE from the point where the thermometer glyph meets
   // the inner bezel (200, 236). Each tick's near-end sits on a flat
