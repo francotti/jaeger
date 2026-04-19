@@ -186,6 +186,11 @@
             <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
 
+          <!-- soft blur for the needle's cast-shadow strip on the dial face (light from upper-right) -->
+          <filter id="needleShadowT" x="-50%" y="-10%" width="200%" height="120%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.2"/>
+          </filter>
+
           <!-- Mask for the bezel ring only -->
           <mask id="bezelRingT">
             <rect width="400" height="400" fill="black"/>
@@ -282,6 +287,10 @@
         <!-- All dial graphics above (numerals, °C, thermometer, MADE IN FRANCE) are BEHIND the needle. -->
         <!-- Pivot is at (200,271) — half the radius below the dial center. -->
         <g id="tempNeedle" class="needle">
+          <!-- Cast shadow strip on the dial face to the LEFT of the needle (light from upper-right).
+               Blurred, low-opacity black rect offset ~5 units left of the needle body.
+               Sits INSIDE the needle group so it rotates with the needle, always staying on its left side. -->
+          <rect x="184" y="141" width="14" height="140" fill="#000" opacity="0.45" filter="url(#needleShadowT)"/>
           <!-- Solid opaque backing to guarantee the needle is not see-through -->
           <rect x="194" y="140" width="12" height="141" fill="#b8c2c6"/>
           <!-- Left (shadowed) half: x 194 → 200, y 140 → 281 (tip just below the 10-marker tick) -->
