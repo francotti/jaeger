@@ -635,9 +635,11 @@ function tempAngle(v) {
       [x2 - xOff, y2],                // top-right
       [x2 + xOff, y2]                 // top-left
     ].map(p => p.join(",")).join(" ");
+    // The "0" tick gets a faded light-blue fill — a vintage freezing-point accent.
+    const tickFill = (v === 0) ? "#a8c2d2" : "#d8dfe1";
     ticks.appendChild(el("polygon", {
       points: pts,
-      fill: "#d8dfe1"
+      fill: tickFill
     }));
 
     // Numeral: render each character as a hand-drawn stroked glyph,
