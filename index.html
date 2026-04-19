@@ -589,17 +589,15 @@ function tempAngle(v) {
   const fanOX       = 200;
   const fanOY       = 236;
   const tickBottomY = 138;   // ~17 px of clearance above numeral cap
-  // Per-tick slant length. Outer ticks (-10 and 30) are lengthened so their
-  // tips reach past r≈132 (face edge) into the bezel annulus, where they
-  // sit under the inner bezel's shadow. Middle ticks keep the original length.
-  const tickLens    = [48, 30, 30, 30, 48];
+  const tickLen     = 30;    // length used for the OUTER ticks (sets the shared top level)
 
-  // Use the MIDDLE marker's slant to define the shared-top level for the
-  // three inner ticks, so ticks 1/2/3 still have horizontally aligned tops.
-  const _midDx = tickX[1] - fanOX;
-  const _midD  = Math.hypot(_midDx, tickBottomY - fanOY);
-  const _midUy = (tickBottomY - fanOY) / _midD;
-  const tickTopY_mid = tickBottomY + 30 * _midUy;   // shared top level for inner ticks
+  // Use the outer marker's slant geometry to define the shared top y-coordinate.
+  // All ticks (including the central vertical one) will have their TOP edge at this y,
+  // so tops and bottoms of every polygon are horizontally aligned.
+  const _outerDx = tickX[0] - fanOX;
+  const _outerD  = Math.hypot(_outerDx, tickBottomY - fanOY);
+  const _outerUy = (tickBottomY - fanOY) / _outerD;
+  const tickTopY = tickBottomY + tickLen * _outerUy;   // shared top level
 
   TEMP_MARKS.forEach((v, i) => {
     const tx = tickX[i];
@@ -608,12 +606,10 @@ function tempAngle(v) {
     const dy = tickBottomY - fanOY;
     const d  = Math.hypot(dx, dy);
     const ux = dx / d, uy = dy / d;   // unit vector along radial ray
-    // Outer ticks run the full slant length; inner ticks truncate to the
-    // shared top line so tops of 1/2/3 stay horizontally aligned.
-    const isOuter = (i === 0 || i === TEMP_MARKS.length - 1);
-    const L  = isOuter ? tickLens[i] : (tickTopY_mid - tickBottomY) / uy;
+    // Truncate this tick along its slant ray so its top edge lands on tickTopY.
+    const L  = (tickTopY - tickBottomY) / uy;   // length along slant to hit shared top
     const x2 = tx + L * ux;
-    const y2 = tickBottomY + L * uy;
+    const y2 = tickTopY;
 
     // Draw each tick as a filled parallelogram: slant follows the radial
     // direction (same as before) but the top and bottom edges are HORIZONTAL
