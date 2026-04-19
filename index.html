@@ -58,21 +58,19 @@
     transition:transform 1.4s cubic-bezier(.22,1,.3,1);
   }
   /* Frost / freeze warning: when the temperature is below 3 °C,
-     the temperature needle pulses a warm amber.  A gentle
-     3-second cycle, peaking at a yellow sepia tint plus a soft
-     yellow drop-shadow, and returning to its normal silver
-     appearance.  The 0 % / 100 % keyframes apply "filter:none"
-     so the needle's natural gradient is preserved at rest. */
-  @keyframes needleColdBlink {
-    0%, 100% { filter: none; }
-    50% {
-      filter:
-        sepia(1) saturate(6) hue-rotate(-18deg) brightness(1.12)
-        drop-shadow(0 0 5px rgba(245,210,80,.85));
-    }
+     a yellow glow rect inside the needle group pulses its
+     opacity.  Implemented with a plain SVG element + an SVG
+     feGaussianBlur filter instead of CSS `filter:` on the <g>,
+     because CSS filter on SVG groups is unreliable on iOS Safari.
+     The glow rect is the LAST child of #tempNeedle so it sits
+     on top of the silver body, and rotates with the needle. */
+  @keyframes needleColdPulse {
+    0%, 100% { opacity: 0; }
+    50%      { opacity: 0.85; }
   }
-  .needle.cold-warn{
-    animation: needleColdBlink 3s ease-in-out infinite;
+  .needle-cold-glow{opacity:0;pointer-events:none;}
+  .needle.cold-warn .needle-cold-glow{
+    animation: needleColdPulse 3s ease-in-out infinite;
   }
   footer{
     margin-top:12px;font-size:11px;letter-spacing:.28em;
@@ -95,6 +93,10 @@
   }
   .btn-vintage:active,.btn-vintage:hover{background:#1f1f1f;border-color:#5a5a5a;color:#e8dcb0;}
   .build-stamp{margin-top:10px;font-size:8px;letter-spacing:.42em;color:#3f3f3f;}
+  .awake-tag{
+    margin-top:4px;font-size:8px;letter-spacing:.42em;
+    color:#3f3f3f;text-align:center;
+  }
   /* iOS safe-area insets when launched as standalone home-screen app */
   @supports (padding: max(0px)){
     body{
@@ -273,6 +275,14 @@
             <feGaussianBlur in="SourceGraphic" stdDeviation="1.4"/>
           </filter>
 
+          <!-- Soft yellow glow for the cold-warning pulse. Blurs
+               the solid yellow rect so light spills a few units
+               past the needle's edges. SVG feGaussianBlur is fully
+               supported on iOS Safari (unlike CSS filter on <g>). -->
+          <filter id="coldGlowT" x="-100%" y="-30%" width="300%" height="160%">
+            <feGaussianBlur stdDeviation="3"/>
+          </filter>
+
           <!-- Desaturate + darken the JAEGER plate PNG (a bit greyer, a bit darker) -->
           <filter id="plateTintT" x="0%" y="0%" width="100%" height="100%">
             <feColorMatrix type="saturate" values="0.55"/>
@@ -406,6 +416,11 @@
           <rect x="194" y="140" width="12" height="141"
                 fill="none" stroke="#2c2210" stroke-width=".4"/>
           <circle cx="200" cy="271" r="3.2" fill="#0c0804"/>
+          <!-- Yellow frost-warning glow overlay. Pulses opacity
+               via CSS animation when body has class 'cold-warn'. -->
+          <rect class="needle-cold-glow"
+                x="190" y="138" width="20" height="145"
+                fill="#f2c94c" filter="url(#coldGlowT)"/>
         </g>
 
         <!-- ============ LOUVRE BAND (integrated into the inner bezel) ============ -->
@@ -603,17 +618,24 @@
     <div style="margin-top:6px;font-size:9px;letter-spacing:.34em;color:#5a5a5a">
       DATA · OPEN-METEO · AUTO-REFRESH 10 MIN
     </div>
-    <div class="build-stamp" id="buildStamp">BUILD 2026-04-20-0018 · <span id="awakeTag">AWAKE · —</span></div>
+    <div class="build-stamp" id="buildStamp">BUILD 2026-04-20-0018</div>
   </footer>
+  <!-- Permanent AWAKE status tag — stays visible even after the
+       footer auto-hides, so you can see whether the screen lock
+       is active without tapping the screen. -->
+  <div id="awakeTag" class="awake-tag">AWAKE · —</div>
 </div>
 
 <!-- Silent looping video — a belt-and-suspenders trick that keeps
      iOS screens awake even when Wake Lock API is unavailable or
-     denied. Invisible (1 px, opacity ~0) but must remain in the DOM
-     and actively playing for the effect to work on older iOS. -->
+     denied. Must be big enough and opaque enough that iOS treats
+     it as genuinely "visible" media: 8x8 px with opacity 0.08,
+     nestled in the bottom-right corner.  `autoplay` + `muted`
+     + `playsinline` + `webkit-playsinline` is the combination
+     that lets iOS start it without requiring a user tap. -->
 <video id="sleepKiller"
-       muted playsinline loop preload="auto"
-       style="position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;"
+       muted playsinline webkit-playsinline autoplay loop preload="auto"
+       style="position:fixed;right:0;bottom:0;width:8px;height:8px;opacity:0.08;pointer-events:none;z-index:-1;"
        src="data:video/mp4;base64,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">
 </video>
 
@@ -1070,12 +1092,13 @@ function updateAwakeTag() {
   if (!awakeTag) return;
   const lockOn  = !!wakeLock;
   const videoOn = videoActive;
-  let state;
-  if (lockOn && videoOn)      state = "AWAKE · LOCK+VIDEO";
-  else if (lockOn)            state = "AWAKE · LOCK";
-  else if (videoOn)           state = "AWAKE · VIDEO";
-  else                        state = "AWAKE · OFF";
+  let state, live = false;
+  if (lockOn && videoOn)      { state = "AWAKE · LOCK+VIDEO"; live = true; }
+  else if (lockOn)            { state = "AWAKE · LOCK";       live = true; }
+  else if (videoOn)           { state = "AWAKE · VIDEO";      live = true; }
+  else                          state = "AWAKE · OFF";
   awakeTag.textContent = state;
+  awakeTag.style.color = live ? "#6fa66a" : "#7a3a3a";
 }
 
 async function acquireWakeLock() {
