@@ -73,6 +73,13 @@
       padding-bottom: env(safe-area-inset-bottom);
     }
   }
+  /* Hide the top text block when running as a home-screen app.
+     Two triggers: CSS display-mode for modern iOS + a body class
+     set by JS via navigator.standalone for older iOS Safari. */
+  @media (display-mode: standalone), (display-mode: fullscreen){
+    header{display:none;}
+  }
+  body.ios-standalone header{display:none;}
   @media (max-width:820px){.gauge{width:270px;height:270px;}}
 </style>
 </head>
@@ -777,6 +784,14 @@ function tempAngle(v) {
    Live data — Open-Meteo, using the device's location
    when the browser permits it, otherwise Amsterdam.
 --------------------------------------------------*/
+/* iOS Safari (older versions) does not honour the CSS
+   `display-mode: standalone` media query, but exposes
+   `navigator.standalone === true` when launched from the
+   home screen. Flag the body so CSS can hide the header. */
+if (window.navigator.standalone === true) {
+  document.body.classList.add("ios-standalone");
+}
+
 const DEFAULT_LOC = {
   lat:   52.3676,
   lon:   4.9041,
