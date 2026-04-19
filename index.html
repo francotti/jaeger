@@ -563,7 +563,7 @@ function tempAngle(v) {
   // angles that get more tilted toward the outer ends.
   // Numerals fit INSIDE the new inner bezel (deeper face, r=132 around centre).
   const numX    = [136, 168, 200, 232, 264];   // 32 px spacing, centred
-  const numY    = 155;                          // raised higher toward the ticks
+  const numY    = 159;                          // raised toward the ticks (nudged back down a tick)
 
   // Vintage Jaeger numerals (per reference photo). All glyphs share the
   // same height (±4.5, total 9) and the same stroke weight. "0" is a
@@ -577,8 +577,9 @@ function tempAngle(v) {
     '2': 'M -2.76 -5.52 Q -2.76 -8.4 -1.08 -8.4 L 1.08 -8.4 Q 2.76 -8.4 2.76 -5.52 Q 2.76 -2.4 1.44 0 L -2.76 5.52 L -2.76 8.4 L 2.76 8.4',
     '3': 'M -2.76 -5.52 Q -2.76 -8.4 -1.08 -8.4 L 1.08 -8.4 Q 2.76 -8.4 2.76 -5.52 Q 2.76 -2.4 0.96 -0.48 L -0.24 -0.48 M -0.24 0.48 L 0.96 0.48 Q 2.76 2.4 2.76 5.52 Q 2.76 8.4 1.08 8.4 L -1.08 8.4 Q -2.76 8.4 -2.76 5.52'
   };
-  const CHAR_PITCH  = 10.5;  // horizontal distance between glyph centres
-  const GLYPH_STROKE = 2.9;  // thickness of the digits
+  const PITCH_WIDE   = 12.5;  // horizontal pitch between wide digits (0, 2, 3)
+  const PITCH_NARROW = 10.5;  // pitch where a '1' or '-' sits next to the pair
+  const GLYPH_STROKE = 2.9;   // thickness of the digits
 
   // Ticks RADIATE from the point where the thermometer glyph meets
   // the inner bezel (200, 236). Each tick's near-end sits on a flat
@@ -627,12 +628,22 @@ function tempAngle(v) {
 
     // Numeral: render each character as a hand-drawn stroked glyph,
     // translated so the whole string is horizontally centred at (nx, numY).
+    // Pitch is narrower around '1' and '-' because those glyphs are thinner,
+    // so a uniform wide pitch would leave a visible gap around them.
     const s = String(v);
+    const chars = s.split("");
+    const offsets = [0];
+    for (let i = 1; i < chars.length; i++) {
+      const usesNarrow = chars[i] === '1' || chars[i-1] === '1' ||
+                         chars[i] === '-' || chars[i-1] === '-';
+      offsets.push(offsets[i-1] + (usesNarrow ? PITCH_NARROW : PITCH_WIDE));
+    }
+    const totalW = offsets[offsets.length - 1];
     const numGroup = el("g", { transform: `translate(${nx} ${numY})` });
-    s.split("").forEach((ch, idx) => {
+    chars.forEach((ch, idx) => {
       const d = GLYPH[ch];
       if (!d) return;
-      const gx = (idx - (s.length - 1) / 2) * CHAR_PITCH;
+      const gx = offsets[idx] - totalW / 2;
       numGroup.appendChild(el("path", {
         d,
         fill: "none",
