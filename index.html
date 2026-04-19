@@ -243,6 +243,11 @@
         <!-- Placed BEFORE the louvre band so the waves render on top of the needle's lower half. -->
         <!-- Pivot is at (200,271) — half the radius below the dial center. -->
         <g id="tempNeedle" class="needle">
+          <!-- Dark gray halo behind the needle — slightly oversized so a 2-unit rim
+               of dark gray is visible around the silver body, giving it a solid
+               silhouette halo that reads as opaque against the dial. Rotates with
+               the needle because it sits inside the tempNeedle group. -->
+          <rect x="192" y="138" width="16" height="145" fill="#1a1a1a"/>
           <!-- Solid opaque backing to guarantee the needle is not see-through -->
           <rect x="194" y="140" width="12" height="141" fill="#b8c2c6"/>
           <!-- Left (shadowed) half: x 194 → 200, y 140 → 281 (tip just below the 10-marker tick) -->
