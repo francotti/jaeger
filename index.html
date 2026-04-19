@@ -50,26 +50,31 @@
     <div class="gauge" id="tempGauge">
       <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <!-- === Polished stainless bezel (concentric reflections) === -->
+          <!-- === Polished MIRROR chrome bezel — high-contrast concentric reflections
+                   with cool blue-white specular peaks and near-black valleys === -->
           <radialGradient id="bezelTemp" cx="50%" cy="50%" r="50%">
-            <stop offset="78%"  stop-color="#050505"/>
-            <stop offset="80%"  stop-color="#2a2a2a"/>
-            <stop offset="82%"  stop-color="#c0c0c0"/>
-            <stop offset="84%"  stop-color="#f6f6f6"/>
-            <stop offset="86%"  stop-color="#8a8a8a"/>
-            <stop offset="88%"  stop-color="#e4e4e4"/>
-            <stop offset="90%"  stop-color="#6a6a6a"/>
-            <stop offset="92%"  stop-color="#d0d0d0"/>
-            <stop offset="94%"  stop-color="#909090"/>
-            <stop offset="96%"  stop-color="#e8e8e8"/>
-            <stop offset="98%"  stop-color="#4a4a4a"/>
-            <stop offset="100%" stop-color="#0a0a0a"/>
+            <stop offset="76%"  stop-color="#000000"/>
+            <stop offset="79%"  stop-color="#222226"/>
+            <stop offset="81%"  stop-color="#c8cfd6"/>
+            <stop offset="83%"  stop-color="#fbfcfe"/>
+            <stop offset="85%"  stop-color="#5a6066"/>
+            <stop offset="87%"  stop-color="#eef2f5"/>
+            <stop offset="89%"  stop-color="#3a4048"/>
+            <stop offset="91%"  stop-color="#fafbfd"/>
+            <stop offset="93%"  stop-color="#7e8690"/>
+            <stop offset="96%"  stop-color="#edf1f4"/>
+            <stop offset="98%"  stop-color="#23262a"/>
+            <stop offset="100%" stop-color="#050508"/>
           </radialGradient>
+          <!-- Environment sheen: bright sky reflection on top, hard horizon line at
+               the equator, muted ground bounce below, deep shadow at the bottom. -->
           <linearGradient id="bezelSheenT" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%"   stop-color="rgba(255,255,255,.42)"/>
-            <stop offset="45%"  stop-color="rgba(255,255,255,0)"/>
-            <stop offset="55%"  stop-color="rgba(0,0,0,0)"/>
-            <stop offset="100%" stop-color="rgba(0,0,0,.55)"/>
+            <stop offset="0%"   stop-color="rgba(248,252,255,.62)"/>
+            <stop offset="32%"  stop-color="rgba(248,252,255,.06)"/>
+            <stop offset="48%"  stop-color="rgba(0,0,0,.20)"/>
+            <stop offset="52%"  stop-color="rgba(0,0,0,.42)"/>
+            <stop offset="72%"  stop-color="rgba(180,190,200,.08)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,.72)"/>
           </linearGradient>
           <filter id="brushT" x="0" y="0" width="100%" height="100%">
             <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="3"/>
@@ -227,7 +232,7 @@
         <!-- ============ BEZEL ============ -->
         <circle cx="200" cy="200" r="196" fill="url(#bezelTemp)"/>
         <rect width="400" height="400" fill="url(#bezelSheenT)" mask="url(#bezelRingT)"/>
-        <rect width="400" height="400" fill="#000" filter="url(#brushT)" mask="url(#bezelRingT)" opacity=".45"/>
+        <rect width="400" height="400" fill="#000" filter="url(#brushT)" mask="url(#bezelRingT)" opacity=".15"/>
         <circle cx="200" cy="200" r="194" fill="none" stroke="rgba(255,255,255,.35)" stroke-width=".7"/>
         <circle cx="200" cy="200" r="188" fill="none" stroke="rgba(0,0,0,.50)"       stroke-width=".6"/>
         <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(255,255,255,.25)" stroke-width=".7"/>
@@ -348,24 +353,26 @@
       <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <radialGradient id="bezelWind" cx="50%" cy="50%" r="50%">
-            <stop offset="78%"  stop-color="#050505"/>
-            <stop offset="80%"  stop-color="#2a2a2a"/>
-            <stop offset="82%"  stop-color="#c0c0c0"/>
-            <stop offset="84%"  stop-color="#f6f6f6"/>
-            <stop offset="86%"  stop-color="#8a8a8a"/>
-            <stop offset="88%"  stop-color="#e4e4e4"/>
-            <stop offset="90%"  stop-color="#6a6a6a"/>
-            <stop offset="92%"  stop-color="#d0d0d0"/>
-            <stop offset="94%"  stop-color="#909090"/>
-            <stop offset="96%"  stop-color="#e8e8e8"/>
-            <stop offset="98%"  stop-color="#4a4a4a"/>
-            <stop offset="100%" stop-color="#0a0a0a"/>
+            <stop offset="76%"  stop-color="#000000"/>
+            <stop offset="79%"  stop-color="#222226"/>
+            <stop offset="81%"  stop-color="#c8cfd6"/>
+            <stop offset="83%"  stop-color="#fbfcfe"/>
+            <stop offset="85%"  stop-color="#5a6066"/>
+            <stop offset="87%"  stop-color="#eef2f5"/>
+            <stop offset="89%"  stop-color="#3a4048"/>
+            <stop offset="91%"  stop-color="#fafbfd"/>
+            <stop offset="93%"  stop-color="#7e8690"/>
+            <stop offset="96%"  stop-color="#edf1f4"/>
+            <stop offset="98%"  stop-color="#23262a"/>
+            <stop offset="100%" stop-color="#050508"/>
           </radialGradient>
           <linearGradient id="bezelSheenW" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%"   stop-color="rgba(255,255,255,.42)"/>
-            <stop offset="45%"  stop-color="rgba(255,255,255,0)"/>
-            <stop offset="55%"  stop-color="rgba(0,0,0,0)"/>
-            <stop offset="100%" stop-color="rgba(0,0,0,.55)"/>
+            <stop offset="0%"   stop-color="rgba(248,252,255,.62)"/>
+            <stop offset="32%"  stop-color="rgba(248,252,255,.06)"/>
+            <stop offset="48%"  stop-color="rgba(0,0,0,.20)"/>
+            <stop offset="52%"  stop-color="rgba(0,0,0,.42)"/>
+            <stop offset="72%"  stop-color="rgba(180,190,200,.08)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,.72)"/>
           </linearGradient>
           <filter id="brushW" x="0" y="0" width="100%" height="100%">
             <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="11"/>
@@ -443,7 +450,7 @@
 
         <circle cx="200" cy="200" r="196" fill="url(#bezelWind)"/>
         <rect width="400" height="400" fill="url(#bezelSheenW)" mask="url(#bezelRingW)"/>
-        <rect width="400" height="400" fill="#000" filter="url(#brushW)" mask="url(#bezelRingW)" opacity=".45"/>
+        <rect width="400" height="400" fill="#000" filter="url(#brushW)" mask="url(#bezelRingW)" opacity=".15"/>
         <circle cx="200" cy="200" r="194" fill="none" stroke="rgba(255,255,255,.35)" stroke-width=".7"/>
         <circle cx="200" cy="200" r="188" fill="none" stroke="rgba(0,0,0,.50)"       stroke-width=".6"/>
         <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(255,255,255,.25)" stroke-width=".7"/>
