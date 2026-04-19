@@ -571,13 +571,13 @@ function tempAngle(v) {
   // have rounded tops and bottoms built from quadratic curves so they
   // read as one coherent typeface rather than hand-drawn outliers.
   const GLYPH = {
-    '-': 'M -3 0 L 3 0',
-    '0': 'M -3.2 -1.3 L -3.2 1.3 A 3.2 3.2 0 0 0 3.2 1.3 L 3.2 -1.3 A 3.2 3.2 0 0 0 -3.2 -1.3 Z',
-    '1': 'M -1.6 -3 L 0 -4.5 L 0 4.5 M -2 4.5 L 2 4.5',
-    '2': 'M -3 -3 Q -3 -4.5 -1.2 -4.5 L 1.2 -4.5 Q 3 -4.5 3 -3 Q 3 -1.3 1.5 0 L -3 3 L -3 4.5 L 3 4.5',
-    '3': 'M -3 -3 Q -3 -4.5 -1.2 -4.5 L 1.2 -4.5 Q 3 -4.5 3 -3 Q 3 -1.3 1 -0.2 L -0.2 -0.2 M -0.2 0.2 L 1 0.2 Q 3 1.3 3 3 Q 3 4.5 1.2 4.5 L -1.2 4.5 Q -3 4.5 -3 3'
+    '-': 'M -2.3 0 L 2.3 0',
+    '0': 'M -2.5 -1.0 L -2.5 1.0 A 2.5 2.5 0 0 0 2.5 1.0 L 2.5 -1.0 A 2.5 2.5 0 0 0 -2.5 -1.0 Z',
+    '1': 'M -1.3 -2.3 L 0 -3.5 L 0 3.5',
+    '2': 'M -2.3 -2.3 Q -2.3 -3.5 -0.9 -3.5 L 0.9 -3.5 Q 2.3 -3.5 2.3 -2.3 Q 2.3 -1.0 1.2 0 L -2.3 2.3 L -2.3 3.5 L 2.3 3.5',
+    '3': 'M -2.3 -2.3 Q -2.3 -3.5 -0.9 -3.5 L 0.9 -3.5 Q 2.3 -3.5 2.3 -2.3 Q 2.3 -1.0 0.8 -0.2 L -0.2 -0.2 M -0.2 0.2 L 0.8 0.2 Q 2.3 1.0 2.3 2.3 Q 2.3 3.5 0.9 3.5 L -0.9 3.5 Q -2.3 3.5 -2.3 2.3'
   };
-  const CHAR_PITCH  = 7.0;   // horizontal distance between glyph centres
+  const CHAR_PITCH  = 7.5;   // horizontal distance between glyph centres
   const GLYPH_STROKE = 2.0;  // thickness of the digits
 
   // Ticks RADIATE from the point where the thermometer glyph meets
