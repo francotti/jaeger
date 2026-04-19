@@ -2,8 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Jaeger DS Dashboard — Amsterdam</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jaeger DS Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<!-- iPhone "Add to Home Screen" – standalone fullscreen app -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jaeger">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+<!-- Cache-busting: iPhone Safari is aggressive; meta tags + build stamp -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="build" content="2026-04-20-0018">
+
 <style>
   html,body{margin:0;height:100%;}
   body{
@@ -35,6 +53,26 @@
   footer{margin-top:12px;font-size:11px;letter-spacing:.28em;color:#7a7a7a;text-align:center;}
   footer .status{color:#c8b880;}
   footer .err{color:#c86a5a;}
+  .loc-row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px;}
+  #locMode{color:#c8b880;font-size:10px;letter-spacing:.32em;}
+  #locMode .tag{color:#7a7a7a;}
+  .btn-vintage{
+    background:#141414;color:#c8b880;
+    border:1px solid #3a3a3a;border-radius:3px;
+    padding:5px 14px;
+    font:10px/1 "Helvetica Neue","Arial",sans-serif;
+    letter-spacing:.32em;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn-vintage:active,.btn-vintage:hover{background:#1f1f1f;border-color:#5a5a5a;color:#e8dcb0;}
+  .build-stamp{margin-top:10px;font-size:8px;letter-spacing:.42em;color:#3f3f3f;}
+  /* iOS safe-area insets when launched as standalone home-screen app */
+  @supports (padding: max(0px)){
+    body{
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
   @media (max-width:820px){.gauge{width:270px;height:270px;}}
 </style>
 </head>
@@ -519,9 +557,14 @@
 
   <footer>
     <span id="statusLine" class="status">— CONNECTING —</span>
-    <div style="margin-top:6px;font-size:9px;letter-spacing:.34em;color:#5a5a5a">
-      DATA · OPEN-METEO · 52.37°N 4.90°E · AUTO-REFRESH 10 MIN
+    <div class="loc-row">
+      <span id="locMode"><span class="tag">LOC</span> — LOCATING —</span>
+      <button id="setCityBtn" class="btn-vintage" type="button">SET CITY</button>
     </div>
+    <div style="margin-top:6px;font-size:9px;letter-spacing:.34em;color:#5a5a5a">
+      DATA · OPEN-METEO · AUTO-REFRESH 10 MIN
+    </div>
+    <div class="build-stamp" id="buildStamp">BUILD 2026-04-20-0018</div>
   </footer>
 </div>
 
@@ -738,17 +781,39 @@ const DEFAULT_LOC = {
   lat:   52.3676,
   lon:   4.9041,
   label: "AMSTERDAM",
-  tz:    "Europe/Amsterdam"
+  tz:    "Europe/Amsterdam",
+  source: "default"
 };
 let currentLoc = DEFAULT_LOC;
 
 const statusEl   = document.getElementById("statusLine");
+const locModeEl  = document.getElementById("locMode");
+const setCityBtn = document.getElementById("setCityBtn");
 const tempNeedle = document.getElementById("tempNeedle");
 const windNeedle = document.getElementById("windNeedle");
+
+/* Persistence for manual city override. localStorage works on
+   GitHub Pages over HTTPS — survives refresh and re-launch. */
+const STORAGE_KEY = "jaeger.manualCity";
+function loadSavedCity() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); }
+  catch { return null; }
+}
+function saveCity(loc)  { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(loc)); } catch {} }
+function clearSavedCity(){ try { localStorage.removeItem(STORAGE_KEY); } catch {} }
 
 function setStatus(msg, err=false) {
   statusEl.textContent = msg;
   statusEl.className = err ? "err" : "status";
+}
+function setLocMode(loc) {
+  if (!locModeEl) return;
+  const tag =
+    loc.source === "manual"  ? "MANUAL" :
+    loc.source === "auto"    ? "AUTO"   :
+                               "DEFAULT";
+  locModeEl.innerHTML =
+    `<span class="tag">LOC</span> ${tag} · ${loc.label}`;
 }
 function pointTempTo(v) {
   const clamped = Math.max(TEMP_MIN, Math.min(TEMP_MAX, v));
@@ -788,13 +853,43 @@ async function reverseGeocode(lat, lon) {
 }
 
 async function resolveLocation() {
+  /* 1. Manual override wins over everything. */
+  const saved = loadSavedCity();
+  if (saved && typeof saved.lat === "number" && typeof saved.lon === "number") {
+    return { ...saved, source: "manual" };
+  }
+  /* 2. Device geolocation. */
   const geo = await tryGeolocation();
-  if (!geo) return DEFAULT_LOC;
+  if (!geo) return { ...DEFAULT_LOC, source: "default" };
   const label = (await reverseGeocode(geo.lat, geo.lon))
              || `${geo.lat.toFixed(2)}°, ${geo.lon.toFixed(2)}°`;
   let tz = "UTC";
   try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch {}
-  return { lat: geo.lat, lon: geo.lon, label, tz };
+  return { lat: geo.lat, lon: geo.lon, label, tz, source: "auto" };
+}
+
+/* Forward-geocode a user-typed city name via Open-Meteo's free
+   geocoding endpoint (no API key, CORS-enabled). Returns a
+   fully-formed location record with source:"manual", or null. */
+async function geocodeCity(name) {
+  try {
+    const r = await fetch(
+      "https://geocoding-api.open-meteo.com/v1/search" +
+      `?name=${encodeURIComponent(name)}&count=1&language=en&format=json`,
+      { cache: "no-store" }
+    );
+    if (!r.ok) return null;
+    const j = await r.json();
+    const hit = j.results?.[0];
+    if (!hit) return null;
+    return {
+      lat: hit.latitude,
+      lon: hit.longitude,
+      label: String(hit.name).toUpperCase(),
+      tz: hit.timezone || "UTC",
+      source: "manual"
+    };
+  } catch { return null; }
 }
 
 function buildApiUrl(loc) {
@@ -807,6 +902,7 @@ function buildApiUrl(loc) {
 async function refresh() {
   try {
     setStatus(`— FETCHING ${currentLoc.label} DATA —`);
+    setLocMode(currentLoc);
     const r = await fetch(buildApiUrl(currentLoc), { cache: "no-store" });
     if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json();
@@ -824,11 +920,45 @@ async function refresh() {
   }
 }
 
+/* SET CITY button — prompts for a city name, geocodes it,
+   stores it, and immediately refreshes. Leaving the field
+   blank clears the override and returns to AUTO. */
+if (setCityBtn) {
+  setCityBtn.addEventListener("click", async () => {
+    const existing = loadSavedCity();
+    const promptMsg = existing
+      ? `Enter a new city (leave blank to clear "${existing.label}" and return to auto):`
+      : "Enter a city name (e.g. Paris, Tokyo, New York):";
+    const input = window.prompt(promptMsg, "");
+    if (input === null) return;                  // user cancelled
+    const name = input.trim();
+    if (name === "") {                           // clear override
+      clearSavedCity();
+      setStatus("— RESET TO AUTO —");
+      currentLoc = await resolveLocation();
+      setLocMode(currentLoc);
+      refresh();
+      return;
+    }
+    setStatus(`— GEOCODING ${name.toUpperCase()} —`);
+    const loc = await geocodeCity(name);
+    if (!loc) {
+      setStatus(`— CITY NOT FOUND: ${name.toUpperCase()} —`, true);
+      return;
+    }
+    saveCity(loc);
+    currentLoc = loc;
+    setLocMode(currentLoc);
+    refresh();
+  });
+}
+
 pointTempTo(TEMP_MIN);
 pointWindTo(0);
 (async () => {
   setStatus("— LOCATING —");
   currentLoc = await resolveLocation();
+  setLocMode(currentLoc);
   refresh();
   setInterval(refresh, 10 * 60 * 1000);
 })();
