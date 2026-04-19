@@ -1016,6 +1016,34 @@ function showFooter() {
 document.addEventListener("click",      showFooter);
 document.addEventListener("touchstart", showFooter, { passive: true });
 scheduleFooterHide();
+
+/* -------------------------------------------------
+   Keep the iPhone (and desktop) screen awake while
+   the dashboard is visible. Uses the Screen Wake
+   Lock API — supported on iOS Safari 16.4+.
+   iOS automatically releases the lock when the tab
+   or app is backgrounded, so we re-acquire it
+   whenever the page becomes visible again. Some iOS
+   versions only grant the lock after a user tap, so
+   we also try on any click / touch.
+--------------------------------------------------*/
+let wakeLock = null;
+async function acquireWakeLock() {
+  if (!("wakeLock" in navigator)) return;
+  if (wakeLock) return;
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => { wakeLock = null; });
+  } catch (_) {
+    wakeLock = null;   // e.g. low-power mode, denied, etc.
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") acquireWakeLock();
+});
+document.addEventListener("click",      acquireWakeLock);
+document.addEventListener("touchstart", acquireWakeLock, { passive: true });
+acquireWakeLock();   // try once immediately
 </script>
 </body>
 </html>
