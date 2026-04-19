@@ -242,8 +242,44 @@
         <!-- Numerals — drawn on a flat horizontal line -->
         <g id="tempNumerals"></g>
 
+        <!-- ============ °C LABEL (° as text; C custom-drawn with asymmetric opening — top arm extends further right than bottom arm) ============ -->
+        <!-- Drawn BEFORE the needle so the needle sweeps OVER this graphic opaquely. -->
+        <text x="194" y="183.6" text-anchor="middle"
+              font-family="Futura, 'Century Gothic', sans-serif"
+              font-size="12.96" font-weight="500" fill="#c8d0d3">°</text>
+        <!-- Custom C: top endpoint at ~-25°, bottom endpoint at ~55° -> top arm extends further right -->
+        <path d="M 207.35,176.77 A 4.8,4.8 0 1 0 205.75,182.73"
+              fill="none" stroke="#c8d0d3" stroke-width="2.4" stroke-linecap="round"/>
+
+        <!-- ============ HORIZONTAL THERMOMETER GLYPH — exact copy of reference photo ============
+             Single merged outline: capsule stem fused into circular bulb on the right.
+             Stem edges terminate exactly at the bulb circle's intersection points
+             (y=±7 meets bulb r=12 at x = 24 - sqrt(95) ≈ 14.25),
+             so no "seams" appear where the two shapes cross.
+             Narrower stem (64px) + vertically centered between °C label and MADE IN FRANCE.
+             Drawn BEFORE the needle so the needle sweeps OVER this graphic opaquely. -->
+        <g transform="translate(200,202)"
+           stroke="#e6ebed" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Fused outline:  top edge  →  bulb arc around the right  →  bottom edge  →  left semicircular cap (outward) -->
+          <path d="M -25,-7 L 14.25,-7 A 12,12 0 1 1 14.25,7 L -25,7 A 7,7 0 0 1 -25,-7 Z"/>
+          <!-- Mercury indicator: horizontal bar in the stem with a hook that goes UP first, loops clockwise over the top, and stops at 4 o'clock -->
+          <!-- Hook arc center is at (24,0) radius 4 — start (20,0)=9 o'clock, end (27.46,2)=4 o'clock, clockwise 210° -->
+          <path d="M -11,0 L 20,0 A 4,4 0 1 1 27.46,2" fill="none" stroke-width="4.10"/>
+          <!-- Small horizontal "0" marker sitting just above the point where the reservoir (bulb) begins -->
+          <ellipse cx="13" cy="-14" rx="2.5" ry="1.2" fill="none" stroke-width="1.2"/>
+          <!-- Small vertical bar attached to the underside of the shaft, directly under the "0" marker -->
+          <line x1="13" y1="8" x2="13" y2="11.4" stroke-width="1.6"/>
+        </g>
+
+        <!-- ============ "MADE IN FRANCE" micro-print (just above the wave band) ============ -->
+        <!-- Drawn BEFORE the needle so the needle sweeps OVER this text opaquely. -->
+        <text x="200" y="226" text-anchor="middle"
+              font-family="Futura, 'Century Gothic', sans-serif"
+              font-size="4.2" font-weight="400" letter-spacing="0.8" fill="#c8d0d3">MADE IN FRANCE</text>
+
         <!-- ============ NEEDLE: ridged prism with shadow on the left, lit on the right ============ -->
         <!-- Placed BEFORE the louvre band so the waves render on top of the needle's lower half. -->
+        <!-- All dial graphics above (numerals, °C, thermometer, MADE IN FRANCE) are BEHIND the needle. -->
         <!-- Pivot is at (200,271) — half the radius below the dial center. -->
         <g id="tempNeedle" class="needle">
           <!-- Dark gray halo behind the needle — mid dark gray (#3a3a3a) so the rim
@@ -269,39 +305,8 @@
         </g>
 
         <!-- ============ LOUVRE BAND (integrated into the inner bezel) ============ -->
+        <!-- Drawn AFTER the needle so the waves cover the needle's lower half — deliberate Jaeger effect. -->
         <g id="tempLouver"></g>
-
-        <!-- ============ °C LABEL (° as text; C custom-drawn with asymmetric opening — top arm extends further right than bottom arm) ============ -->
-        <text x="194" y="183.6" text-anchor="middle"
-              font-family="Futura, 'Century Gothic', sans-serif"
-              font-size="12.96" font-weight="500" fill="#c8d0d3">°</text>
-        <!-- Custom C: top endpoint at ~-25°, bottom endpoint at ~55° -> top arm extends further right -->
-        <path d="M 207.35,176.77 A 4.8,4.8 0 1 0 205.75,182.73"
-              fill="none" stroke="#c8d0d3" stroke-width="2.4" stroke-linecap="round"/>
-
-        <!-- ============ HORIZONTAL THERMOMETER GLYPH — exact copy of reference photo ============
-             Single merged outline: capsule stem fused into circular bulb on the right.
-             Stem edges terminate exactly at the bulb circle's intersection points
-             (y=±7 meets bulb r=12 at x = 24 - sqrt(95) ≈ 14.25),
-             so no "seams" appear where the two shapes cross.
-             Narrower stem (64px) + vertically centered between °C label and MADE IN FRANCE. -->
-        <g transform="translate(200,202)"
-           stroke="#e6ebed" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <!-- Fused outline:  top edge  →  bulb arc around the right  →  bottom edge  →  left semicircular cap (outward) -->
-          <path d="M -25,-7 L 14.25,-7 A 12,12 0 1 1 14.25,7 L -25,7 A 7,7 0 0 1 -25,-7 Z"/>
-          <!-- Mercury indicator: horizontal bar in the stem with a hook that goes UP first, loops clockwise over the top, and stops at 4 o'clock -->
-          <!-- Hook arc center is at (24,0) radius 4 — start (20,0)=9 o'clock, end (27.46,2)=4 o'clock, clockwise 210° -->
-          <path d="M -11,0 L 20,0 A 4,4 0 1 1 27.46,2" fill="none" stroke-width="4.10"/>
-          <!-- Small horizontal "0" marker sitting just above the point where the reservoir (bulb) begins -->
-          <ellipse cx="13" cy="-14" rx="2.5" ry="1.2" fill="none" stroke-width="1.2"/>
-          <!-- Small vertical bar attached to the underside of the shaft, directly under the "0" marker -->
-          <line x1="13" y1="8" x2="13" y2="11.4" stroke-width="1.6"/>
-        </g>
-
-        <!-- ============ "MADE IN FRANCE" micro-print (just above the wave band) ============ -->
-        <text x="200" y="226" text-anchor="middle"
-              font-family="Futura, 'Century Gothic', sans-serif"
-              font-size="4.2" font-weight="400" letter-spacing="0.8" fill="#c8d0d3">MADE IN FRANCE</text>
 
         <!-- ============ JAEGER BRASS PLATE (higher, darker, slanted, with ribbon) ============ -->
         <g transform="translate(200,290)" filter="url(#plateShadow)">
