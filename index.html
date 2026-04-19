@@ -586,9 +586,19 @@
     <div style="margin-top:6px;font-size:9px;letter-spacing:.34em;color:#5a5a5a">
       DATA · OPEN-METEO · AUTO-REFRESH 10 MIN
     </div>
-    <div class="build-stamp" id="buildStamp">BUILD 2026-04-20-0018</div>
+    <div class="build-stamp" id="buildStamp">BUILD 2026-04-20-0018 · <span id="awakeTag">AWAKE · —</span></div>
   </footer>
 </div>
+
+<!-- Silent looping video — a belt-and-suspenders trick that keeps
+     iOS screens awake even when Wake Lock API is unavailable or
+     denied. Invisible (1 px, opacity ~0) but must remain in the DOM
+     and actively playing for the effect to work on older iOS. -->
+<video id="sleepKiller"
+       muted playsinline loop preload="auto"
+       style="position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;"
+       src="data:video/mp4;base64,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">
+</video>
 
 <script>
 const svgNS = "http://www.w3.org/2000/svg";
@@ -1018,32 +1028,84 @@ document.addEventListener("touchstart", showFooter, { passive: true });
 scheduleFooterHide();
 
 /* -------------------------------------------------
-   Keep the iPhone (and desktop) screen awake while
-   the dashboard is visible. Uses the Screen Wake
-   Lock API — supported on iOS Safari 16.4+.
-   iOS automatically releases the lock when the tab
-   or app is backgrounded, so we re-acquire it
-   whenever the page becomes visible again. Some iOS
-   versions only grant the lock after a user tap, so
-   we also try on any click / touch.
+   Keep the screen awake. Two cooperating mechanisms:
+     1. Screen Wake Lock API — iOS 16.4+, desktop
+     2. Silent looping <video> — fallback for older
+        iOS, works by keeping media playback active
+        so the OS treats the page as "in use".
+   iOS requires user activation before starting video
+   playback, so the video only starts after the first
+   tap/click. Both mechanisms are re-armed on
+   visibility change (tab/app returned to foreground).
 --------------------------------------------------*/
 let wakeLock = null;
+let videoActive = false;
+const sleepKiller = document.getElementById("sleepKiller");
+const awakeTag    = document.getElementById("awakeTag");
+
+function updateAwakeTag() {
+  if (!awakeTag) return;
+  const lockOn  = !!wakeLock;
+  const videoOn = videoActive;
+  let state;
+  if (lockOn && videoOn)      state = "AWAKE · LOCK+VIDEO";
+  else if (lockOn)            state = "AWAKE · LOCK";
+  else if (videoOn)           state = "AWAKE · VIDEO";
+  else                        state = "AWAKE · OFF";
+  awakeTag.textContent = state;
+}
+
 async function acquireWakeLock() {
-  if (!("wakeLock" in navigator)) return;
-  if (wakeLock) return;
+  if (!("wakeLock" in navigator)) { updateAwakeTag(); return; }
+  if (wakeLock) { updateAwakeTag(); return; }
   try {
     wakeLock = await navigator.wakeLock.request("screen");
-    wakeLock.addEventListener("release", () => { wakeLock = null; });
+    wakeLock.addEventListener("release", () => {
+      wakeLock = null;
+      updateAwakeTag();
+    });
   } catch (_) {
     wakeLock = null;   // e.g. low-power mode, denied, etc.
   }
+  updateAwakeTag();
 }
+
+function startSleepKillerVideo() {
+  if (!sleepKiller || videoActive) return;
+  const p = sleepKiller.play();
+  if (p && typeof p.then === "function") {
+    p.then(() => { videoActive = true; updateAwakeTag(); })
+     .catch(() => { /* user activation still pending */ });
+  } else {
+    videoActive = !sleepKiller.paused;
+    updateAwakeTag();
+  }
+}
+if (sleepKiller) {
+  sleepKiller.addEventListener("pause", () => {
+    // iOS sometimes pauses the video on visibility change — try to resume.
+    videoActive = false;
+    updateAwakeTag();
+    if (document.visibilityState === "visible") startSleepKillerVideo();
+  });
+  sleepKiller.addEventListener("playing", () => {
+    videoActive = true;
+    updateAwakeTag();
+  });
+}
+
+function armWakePrevention() {
+  acquireWakeLock();
+  startSleepKillerVideo();
+}
+
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") acquireWakeLock();
+  if (document.visibilityState === "visible") armWakePrevention();
 });
-document.addEventListener("click",      acquireWakeLock);
-document.addEventListener("touchstart", acquireWakeLock, { passive: true });
-acquireWakeLock();   // try once immediately
+document.addEventListener("click",      armWakePrevention);
+document.addEventListener("touchstart", armWakePrevention, { passive: true });
+armWakePrevention();           // try once immediately
+updateAwakeTag();
 </script>
 </body>
 </html>
