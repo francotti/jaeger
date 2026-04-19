@@ -563,6 +563,7 @@ function tempAngle(v) {
   // angles that get more tilted toward the outer ends.
   // Numerals fit INSIDE the new inner bezel (deeper face, r=132 around centre).
   const numX    = [124, 162, 200, 238, 276];   // 38 px spacing, spread wider across the dial
+  const tickX   = [132, 166, 200, 234, 268];   // ticks sit a touch tighter than numerals
   const numY    = 159;                          // raised toward the ticks (nudged back down a tick)
 
   // Vintage Jaeger numerals (per reference photo). All glyphs share the
@@ -593,20 +594,21 @@ function tempAngle(v) {
   // Use the outer marker's slant geometry to define the shared top y-coordinate.
   // All ticks (including the central vertical one) will have their TOP edge at this y,
   // so tops and bottoms of every polygon are horizontally aligned.
-  const _outerDx = numX[0] - fanOX;
+  const _outerDx = tickX[0] - fanOX;
   const _outerD  = Math.hypot(_outerDx, tickBottomY - fanOY);
   const _outerUy = (tickBottomY - fanOY) / _outerD;
   const tickTopY = tickBottomY + tickLen * _outerUy;   // shared top level
 
   TEMP_MARKS.forEach((v, i) => {
+    const tx = tickX[i];
     const nx = numX[i];
-    const dx = nx - fanOX;
+    const dx = tx - fanOX;
     const dy = tickBottomY - fanOY;
     const d  = Math.hypot(dx, dy);
     const ux = dx / d, uy = dy / d;   // unit vector along radial ray
     // Truncate this tick along its slant ray so its top edge lands on tickTopY.
     const L  = (tickTopY - tickBottomY) / uy;   // length along slant to hit shared top
-    const x2 = nx + L * ux;
+    const x2 = tx + L * ux;
     const y2 = tickTopY;
 
     // Draw each tick as a filled parallelogram: slant follows the radial
@@ -616,8 +618,8 @@ function tempAngle(v) {
     const halfW = 6.5 / 2;            // 3.25
     const xOff  = halfW / uy;         // negative because uy is negative
     const pts   = [
-      [nx + xOff, tickBottomY],       // bottom-left
-      [nx - xOff, tickBottomY],       // bottom-right
+      [tx + xOff, tickBottomY],       // bottom-left
+      [tx - xOff, tickBottomY],       // bottom-right
       [x2 - xOff, y2],                // top-right
       [x2 + xOff, y2]                 // top-left
     ].map(p => p.join(",")).join(" ");
