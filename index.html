@@ -113,6 +113,15 @@
             <stop offset="100%" stop-color="#1a1a1a"/>
           </radialGradient>
 
+          <!-- === Inner-bezel cast shadow — soft falloff just inside the bezel edge,
+                   drawn on top of the ticks so the outer tick tips sit in shadow === -->
+          <radialGradient id="bezelInnerShadowT" cx="200" cy="200" r="132" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#000" stop-opacity="0"/>
+            <stop offset="88%"  stop-color="#000" stop-opacity="0"/>
+            <stop offset="96%"  stop-color="#000" stop-opacity="0.38"/>
+            <stop offset="100%" stop-color="#000" stop-opacity="0.70"/>
+          </radialGradient>
+
           <!-- === Matte-plastic WAVE pattern (tiles seamlessly into the next wave) === -->
           <linearGradient id="waveGradT" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stop-color="#5a5a5a"/>
@@ -250,6 +259,9 @@
 
         <!-- ============ TICK MARKS (bold, angled, in the upper arc) ============ -->
         <g id="tempTicks"></g>
+        <!-- Inner-bezel cast shadow over the outermost ~12 px of the face,
+             drawn AFTER the ticks so the outer tick tips read as "under" the bezel. -->
+        <circle cx="200" cy="200" r="132" fill="url(#bezelInnerShadowT)" pointer-events="none"/>
         <!-- Numerals — drawn on a flat horizontal line -->
         <g id="tempNumerals"></g>
 
