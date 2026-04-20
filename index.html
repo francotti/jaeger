@@ -68,9 +68,17 @@
     0%, 100% { opacity: 0; }
     50%      { opacity: 0.85; }
   }
-  .needle-cold-glow{opacity:0;pointer-events:none;}
+  @keyframes needleHotPulse {
+    0%, 100% { opacity: 0; }
+    50%      { opacity: 0.85; }
+  }
+  .needle-cold-glow,
+  .needle-hot-glow{opacity:0;pointer-events:none;}
   .needle.cold-warn .needle-cold-glow{
     animation: needleColdPulse 3s ease-in-out infinite;
+  }
+  .needle.hot-warn .needle-hot-glow{
+    animation: needleHotPulse 3s ease-in-out infinite;
   }
   footer{
     margin-top:12px;font-size:11px;letter-spacing:.28em;
@@ -417,10 +425,15 @@
                 fill="none" stroke="#2c2210" stroke-width=".4"/>
           <circle cx="200" cy="271" r="3.2" fill="#0c0804"/>
           <!-- Yellow frost-warning glow overlay. Pulses opacity
-               via CSS animation when body has class 'cold-warn'. -->
+               via CSS animation when needle has class 'cold-warn'. -->
           <rect class="needle-cold-glow"
                 x="190" y="138" width="20" height="145"
                 fill="#f2c94c" filter="url(#coldGlowT)"/>
+          <!-- Red heat-warning glow overlay. Pulses opacity
+               via CSS animation when needle has class 'hot-warn'. -->
+          <rect class="needle-hot-glow"
+                x="190" y="138" width="20" height="145"
+                fill="#d64545" filter="url(#coldGlowT)"/>
         </g>
 
         <!-- ============ LOUVRE BAND (integrated into the inner bezel) ============ -->
@@ -894,15 +907,18 @@ function setLocMode(loc) {
   locModeEl.innerHTML =
     `<span class="tag">LOC</span> ${tag} · ${loc.label}`;
 }
-const COLD_WARN_BELOW = 3;   // °C — needle blinks yellow below this
+const COLD_WARN_BELOW = 3;    // °C — needle blinks yellow below this
+const HOT_WARN_ABOVE  = 30;   // °C — needle blinks red above this
 function pointTempTo(v, isReal = false) {
   const clamped = Math.max(TEMP_MIN, Math.min(TEMP_MAX, v));
   tempNeedle.style.transform = `rotate(${tempAngle(clamped)}deg)`;
-  /* Only toggle the frost warning when this call carries a real
+  /* Only toggle the warnings when this call carries a real
      measurement — otherwise the initial "park at TEMP_MIN" call
      would trigger the blink before any data is fetched. */
   const cold = isReal && typeof v === "number" && v < COLD_WARN_BELOW;
+  const hot  = isReal && typeof v === "number" && v > HOT_WARN_ABOVE;
   tempNeedle.classList.toggle("cold-warn", cold);
+  tempNeedle.classList.toggle("hot-warn",  hot);
 }
 function pointWindTo(deg) {
   windNeedle.style.transform = `rotate(${deg}deg)`;
