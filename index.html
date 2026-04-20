@@ -61,6 +61,16 @@
     transform-origin:200px 271px;transform:rotate(0deg);
     transition:transform 1.4s cubic-bezier(.22,1,.3,1);
   }
+  /* Rotating compass card. Pivot is the dial centre (200,200) because
+     the wind dial uses that as its face centre (not 271 like the temp
+     needle).  Faster transition than the temp needle — the compass can
+     swing rapidly as the phone is rotated in hand. */
+  #compassFace{
+    transform-box:view-box;
+    transform-origin:200px 200px;
+    transform:rotate(0deg);
+    transition:transform .35s ease-out;
+  }
   /* Frost / freeze warning: when the temperature is below 3 °C,
      a yellow glow rect inside the needle group pulses its
      opacity.  Implemented with a plain SVG element + an SVG
@@ -538,6 +548,23 @@
             <stop offset="70%"  stop-color="#d9caa0"/>
             <stop offset="100%" stop-color="#867552"/>
           </linearGradient>
+          <!-- Fixed-arrow needle (thermometer style) on the compass dial.
+               These gradients mirror the temp dial's needleLeft/needleRight
+               but live in this SVG's own defs (SVG defs don't cross
+               <svg> boundaries). -->
+          <linearGradient id="needleLeftW" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%"   stop-color="#8a969b"/>
+            <stop offset="50%"  stop-color="#b9c3c7"/>
+            <stop offset="100%" stop-color="#d8e0e3"/>
+          </linearGradient>
+          <linearGradient id="needleRightW" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%"   stop-color="#eef1f3"/>
+            <stop offset="50%"  stop-color="#c4cdd1"/>
+            <stop offset="100%" stop-color="#90999e"/>
+          </linearGradient>
+          <filter id="needleShadowW" x="-50%" y="-10%" width="200%" height="120%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.4"/>
+          </filter>
           <linearGradient id="brassDark2" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%"   stop-color="#7e5e20"/>
             <stop offset="45%"  stop-color="#9b7a2c"/>
@@ -592,8 +619,15 @@
         <path d="M 74 200 A 126 126 0 0 1 326 200"
               fill="none" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
 
-        <g id="windTicks"></g>
-        <g id="windLetters"></g>
+        <!-- Rotating compass card — holds the ticks + cardinal letters.
+             When the phone's compass is active, the card rotates so that
+             true north always sits under the fixed arrow.  Drawn BEFORE
+             #windLouver so the louvres pass over the top half of the
+             rotating card exactly as the brief requests. -->
+        <g id="compassFace">
+          <g id="windTicks"></g>
+          <g id="windLetters"></g>
+        </g>
 
         <text x="200" y="215" text-anchor="middle"
               font-family="Futura, 'Century Gothic', sans-serif"
@@ -617,9 +651,31 @@
                  filter="url(#plateBrightenW)"/>
         </g>
 
-        <g id="windNeedle" class="needle">
-          <polygon points="200,80 196.6,200 203.4,200" fill="url(#needleCreamW)" stroke="#2c2210" stroke-width=".4"/>
-          <polygon points="200,320 196.6,200 203.4,200" fill="#554634" stroke="#2c2210" stroke-width=".4"/>
+        <!-- FIXED compass arrow — points straight up, never rotates.
+             Styled like the thermometer needle: ridged silver bar with
+             shadow on the left, lit ridge on the right, outlined and
+             pivoted at dial centre.  Because the card beneath rotates,
+             the arrow effectively picks out whichever cardinal point
+             is currently aligned with true north. -->
+        <g id="windArrow">
+          <!-- Cast shadow on the face to the left -->
+          <rect x="187" y="117" width="11" height="83"
+                fill="#000" opacity="0.55" filter="url(#needleShadowW)"/>
+          <!-- Solid opaque backing so the arrow is not see-through -->
+          <rect x="194" y="115" width="12" height="85" fill="#b8c2c6"/>
+          <!-- Left (shadowed) half -->
+          <polygon points="194,115 200,115 200,200 194,200"
+                   fill="url(#needleLeftW)"/>
+          <!-- Right (lit) half -->
+          <polygon points="200,115 206,115 206,200 200,200"
+                   fill="url(#needleRightW)"/>
+          <!-- Crisp central ridge hairline -->
+          <line x1="200" y1="115" x2="200" y2="200"
+                stroke="#f5f8fa" stroke-width="0.5" opacity="0.9"/>
+          <!-- Outline silhouette -->
+          <rect x="194" y="115" width="12" height="85"
+                fill="none" stroke="#2c2210" stroke-width=".4"/>
+          <!-- Pivot cap -->
           <circle cx="200" cy="200" r="3.2" fill="#0c0804"/>
         </g>
       </svg>
@@ -631,6 +687,7 @@
     <div class="loc-row">
       <span id="locMode"><span class="tag">LOC</span> — LOCATING —</span>
       <button id="useLocBtn" class="btn-vintage" type="button">USE LOCATION</button>
+      <button id="useCompassBtn" class="btn-vintage" type="button">USE COMPASS</button>
       <button id="setCityBtn" class="btn-vintage" type="button">SET CITY</button>
     </div>
     <div style="margin-top:6px;font-size:9px;letter-spacing:.34em;color:#5a5a5a">
@@ -891,8 +948,11 @@ const useLocBtn  = document.getElementById("useLocBtn");
 /* Last geolocation error reason (DENIED / TIMEOUT / UNAVAILABLE / null).
    Surfaced in the LOC tag so we can see why iPhone fell back to default. */
 let lastGeoError = null;
-const tempNeedle = document.getElementById("tempNeedle");
-const windNeedle = document.getElementById("windNeedle");
+const tempNeedle    = document.getElementById("tempNeedle");
+const compassFace   = document.getElementById("compassFace");
+const useCompassBtn = document.getElementById("useCompassBtn");
+let   compassActive = false;
+let   lastHeading   = null;
 
 /* Persistence for manual city override. localStorage works on
    GitHub Pages over HTTPS — survives refresh and re-launch. */
@@ -931,8 +991,52 @@ function pointTempTo(v, isReal = false) {
   tempNeedle.classList.toggle("cold-warn", cold);
   tempNeedle.classList.toggle("hot-warn",  hot);
 }
-function pointWindTo(deg) {
-  windNeedle.style.transform = `rotate(${deg}deg)`;
+/* No-op: the wind dial is now a phone compass and the arrow is fixed.
+   Kept as a stub so existing call-sites in refresh() don't crash.
+   Wind direction still appears in the footer status line. */
+function pointWindTo(_deg) { /* intentionally empty */ }
+
+/* ---------- Phone-compass rotation of the card ---------- */
+function onCompass(e) {
+  let heading = null;
+  if (typeof e.webkitCompassHeading === "number") {
+    // iOS gives a true-north heading directly.
+    heading = e.webkitCompassHeading;
+  } else if (typeof e.alpha === "number") {
+    // Android / generic: alpha is degrees counter-clockwise from north.
+    heading = 360 - e.alpha;
+  }
+  if (heading === null || !compassFace) return;
+  lastHeading = heading;
+  compassFace.style.transform = `rotate(${-heading}deg)`;
+}
+
+async function enableCompass() {
+  if (typeof DeviceOrientationEvent === "undefined") {
+    setStatus("— COMPASS UNSUPPORTED —", true);
+    return;
+  }
+  try {
+    if (typeof DeviceOrientationEvent.requestPermission === "function") {
+      const status = await DeviceOrientationEvent.requestPermission();
+      if (status !== "granted") {
+        setStatus(`— COMPASS ${status.toUpperCase()} —`, true);
+        return;
+      }
+    }
+  } catch (err) {
+    setStatus("— COMPASS ERROR: " + String(err.message || err).toUpperCase() + " —", true);
+    return;
+  }
+  // Some browsers deliver absolute heading on "deviceorientationabsolute".
+  window.addEventListener("deviceorientationabsolute", onCompass, true);
+  window.addEventListener("deviceorientation",         onCompass, true);
+  compassActive = true;
+  if (useCompassBtn) useCompassBtn.textContent = "COMPASS ON";
+  setStatus("— COMPASS ACTIVE —");
+}
+if (useCompassBtn) {
+  useCompassBtn.addEventListener("click", enableCompass);
 }
 
 /* Ask the browser for a location. Resolves to {lat, lon} or null.
