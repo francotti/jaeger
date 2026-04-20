@@ -115,6 +115,36 @@
   }
   .btn-vintage:active,.btn-vintage:hover{background:#1f1f1f;border-color:#5a5a5a;color:#e8dcb0;}
   .build-stamp{margin-top:10px;font-size:8px;letter-spacing:.42em;color:#3f3f3f;}
+  /* First-tap hint overlay for iOS compass activation.
+     Full-screen but pointer-events:none so any tap still reaches
+     the underlying buttons; the generic document-level listener
+     in autoStartCompass() catches the gesture and triggers the
+     iOS permission prompt. The overlay fades itself out once
+     the tap has been registered. */
+  .compass-hint{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+    z-index:1000;
+    opacity:1;
+    transition: opacity .45s ease-out;
+  }
+  .compass-hint.dim{ opacity:0; }
+  .compass-hint-text{
+    font:10px/1 "Helvetica Neue","Arial",sans-serif;
+    letter-spacing:.34em;
+    color:#c8b880;
+    text-transform:uppercase;
+    padding:10px 16px;
+    border:1px solid #5a4d2e;
+    border-radius:3px;
+    background:rgba(8,8,8,0.85);
+    animation: compassHintPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes compassHintPulse{
+    0%,100% { opacity:.6; }
+    50%     { opacity:1;  }
+  }
   .awake-tag{
     margin-top:4px;font-size:8px;letter-spacing:.42em;
     color:#3f3f3f;text-align:center;
@@ -683,6 +713,12 @@
     </div>
   </div>
 
+  <!-- iOS-only compass activation hint. Shown by autoStartCompass
+       until the user's first tap triggers the permission prompt.
+       Hidden entirely on non-iOS and when compass is already live. -->
+  <div id="compassHint" class="compass-hint" style="display:none">
+    <span id="compassHintText" class="compass-hint-text">TAP ANYWHERE TO ACTIVATE COMPASS</span>
+  </div>
   <footer>
     <span id="statusLine" class="status">— CONNECTING —</span><span id="headingTag" class="status"></span>
     <div class="loc-row">
@@ -1070,27 +1106,59 @@ if (screen.orientation && typeof screen.orientation.addEventListener === "functi
   screen.orientation.addEventListener("change", applyCompassRotation);
 }
 
+/* Remember across page loads whether the user has previously
+   granted the iOS compass permission. iOS does NOT persist the
+   permission itself (so the dialog still appears on each load),
+   but remembering our own flag lets us swap the hint wording from
+   "TAP ANYWHERE TO ACTIVATE COMPASS" to the shorter "TAP TO RESUME
+   COMPASS", so returning users know why the prompt is appearing. */
+const COMPASS_FLAG_KEY = "jaeger.compassGranted";
+function compassWasGranted() {
+  try { return localStorage.getItem(COMPASS_FLAG_KEY) === "1"; }
+  catch { return false; }
+}
+function saveCompassGranted(v) {
+  try {
+    if (v) localStorage.setItem(COMPASS_FLAG_KEY, "1");
+    else   localStorage.removeItem(COMPASS_FLAG_KEY);
+  } catch {}
+}
+
+const compassHintEl    = document.getElementById("compassHint");
+const compassHintTxtEl = document.getElementById("compassHintText");
+function showCompassHint(msg) {
+  if (!compassHintEl) return;
+  if (compassHintTxtEl && msg) compassHintTxtEl.textContent = msg;
+  compassHintEl.classList.remove("dim");
+  compassHintEl.style.display = "flex";
+}
+function hideCompassHint() {
+  if (!compassHintEl) return;
+  compassHintEl.classList.add("dim");
+  setTimeout(() => { compassHintEl.style.display = "none"; }, 500);
+}
+
 async function enableCompass(opts = {}) {
   // opts.silent = true suppresses the status-line chatter when this
   // is called automatically at startup (so the weather readout is
   // not clobbered by "COMPASS ACTIVE" messages).
   const silent = !!opts.silent;
-  if (compassActive) return;
+  if (compassActive) return { success: true };
   if (typeof DeviceOrientationEvent === "undefined") {
     if (!silent) setStatus("— COMPASS UNSUPPORTED —", true);
-    return;
+    return { success: false, reason: "UNSUPPORTED" };
   }
   try {
     if (typeof DeviceOrientationEvent.requestPermission === "function") {
       const status = await DeviceOrientationEvent.requestPermission();
       if (status !== "granted") {
         if (!silent) setStatus(`— COMPASS ${status.toUpperCase()} —`, true);
-        return;
+        return { success: false, reason: status.toUpperCase() };
       }
     }
   } catch (err) {
     if (!silent) setStatus("— COMPASS ERROR: " + String(err.message || err).toUpperCase() + " —", true);
-    return;
+    return { success: false, reason: "ERROR" };
   }
   // Some browsers deliver absolute heading on "deviceorientationabsolute".
   window.addEventListener("deviceorientationabsolute", onCompass, true);
@@ -1098,6 +1166,7 @@ async function enableCompass(opts = {}) {
   compassActive = true;
   if (useCompassBtn) useCompassBtn.textContent = "COMPASS ON";
   if (!silent) setStatus("— COMPASS ACTIVE —");
+  return { success: true };
 }
 if (useCompassBtn) {
   useCompassBtn.addEventListener("click", () => enableCompass());
@@ -1111,23 +1180,41 @@ if (useCompassBtn) {
    iOS Safari DOES require a user gesture to grant DeviceOrientation
    permission. We can't bypass that, but we can piggy-back on the
    first tap *anywhere* on the page — so the user doesn't have to
-   hunt for the USE COMPASS button. The listeners are removed as
-   soon as permission is granted (or rejected). */
+   hunt for the USE COMPASS button. A subtle overlay hint nudges
+   first-time users to tap; returning users see a shorter "TAP TO
+   RESUME COMPASS" thanks to the persisted flag. */
 (function autoStartCompass() {
   if (typeof DeviceOrientationEvent === "undefined") return;
   const needsPermission =
     typeof DeviceOrientationEvent.requestPermission === "function";
   if (!needsPermission) {
     // Non-iOS: hook up immediately.
-    enableCompass({ silent: true });
+    enableCompass({ silent: true }).then(r => {
+      if (r && r.success) saveCompassGranted(true);
+    });
     return;
   }
-  // iOS: wait for the first user gesture, then request silently.
-  const kickoff = () => {
+  // iOS: show the hint and wait for the first user gesture.
+  const msg = compassWasGranted()
+    ? "TAP TO RESUME COMPASS"
+    : "TAP ANYWHERE TO ACTIVATE COMPASS";
+  showCompassHint(msg);
+
+  const kickoff = async () => {
     document.removeEventListener("pointerdown", kickoff, true);
     document.removeEventListener("touchstart",  kickoff, true);
     document.removeEventListener("click",       kickoff, true);
-    enableCompass({ silent: true });
+    hideCompassHint();
+    const result = await enableCompass({ silent: true });
+    if (result && result.success) {
+      saveCompassGranted(true);
+    } else if (result && result.reason) {
+      // Surface denial/error transiently so the user knows why the
+      // dial isn't responding; clear the persisted flag so next
+      // boot we fall back to the longer "TAP ANYWHERE" hint.
+      saveCompassGranted(false);
+      setStatus(`— COMPASS ${result.reason} —`, true);
+    }
   };
   document.addEventListener("pointerdown", kickoff, true);
   document.addEventListener("touchstart",  kickoff, true);
