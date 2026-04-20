@@ -1022,6 +1022,29 @@ function pointTempTo(v, isReal = false) {
 function pointWindTo(_deg) { /* intentionally empty */ }
 
 /* ---------- Phone-compass rotation of the card ---------- */
+// Returns the current screen rotation in degrees (0 portrait,
+// 90/270 landscape, 180 upside-down). When the user turns the
+// phone sideways the page rotates with it, so the dial's "up"
+// is no longer aligned with the top edge of the physical phone;
+// without compensation the N indicator would end up 90° off.
+function getScreenRotation() {
+  if (screen.orientation && typeof screen.orientation.angle === "number") {
+    return screen.orientation.angle;
+  }
+  if (typeof window.orientation === "number") return window.orientation;
+  return 0;
+}
+function applyCompassRotation() {
+  if (lastHeading === null || !compassFace) return;
+  const orient  = getScreenRotation();
+  // Correct the dial by subtracting the screen rotation so N keeps
+  // pointing at true north regardless of portrait/landscape.
+  const corrected = (lastHeading - orient + 360) % 360;
+  compassFace.style.transform = `rotate(${-corrected}deg)`;
+  if (headingEl) {
+    headingEl.textContent = ` · HEADING ${Math.round(corrected)}°`;
+  }
+}
 function onCompass(e) {
   let heading = null;
   if (typeof e.webkitCompassHeading === "number") {
@@ -1033,13 +1056,14 @@ function onCompass(e) {
   }
   if (heading === null || !compassFace) return;
   lastHeading = heading;
-  compassFace.style.transform = `rotate(${-heading}deg)`;
-  // Live readout of the phone's compass heading in degrees.
-  // Appended to the first text line (statusLine) so it sits
-  // with the other vintage-instrument data.
-  if (headingEl) {
-    headingEl.textContent = ` · HEADING ${Math.round(heading)}°`;
-  }
+  applyCompassRotation();
+}
+// Re-apply the rotation whenever the screen orientation changes
+// (e.g. portrait → landscape) so the dial stays aligned with real
+// north even when the user rotates the phone.
+window.addEventListener("orientationchange", applyCompassRotation);
+if (screen.orientation && typeof screen.orientation.addEventListener === "function") {
+  screen.orientation.addEventListener("change", applyCompassRotation);
 }
 
 async function enableCompass() {
