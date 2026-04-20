@@ -921,18 +921,18 @@ function tempAngle(v) {
   ];
   // Letter radius is pulled IN from the old 90 → 80, putting a clear
   // gap between the ticks (inner end at r≈104) and the letter tops.
-  // All eight labels now render at the same size so N/E/S/W and
-  // NE/SE/SW/NW read as equal peers on the compass rose.
-  const LETTER_R    = 80;
-  const LETTER_SIZE = 19;
-  const LETTER_DY   = 6.8;   // baseline offset to centre the cap on (x,y)
+  // N/E/S/W are the big primary cardinals; NE/SE/SW/NW are back to
+  // their original smaller size so the hierarchy reads clearly.
+  const LETTER_R  = 80;
   cardinals.forEach(c => {
+    const size = c.big ? 19  : 10;
+    const dy   = c.big ? 6.8 : 4;
     const [x, y] = polar(CX, CY, LETTER_R, c.deg);
     letters.appendChild(el("text", {
-      x, y: y + LETTER_DY, "text-anchor": "middle",
+      x, y: y + dy, "text-anchor": "middle",
       transform: `rotate(${c.deg} ${x} ${y})`,
       "font-family": "Futura, 'Century Gothic', sans-serif",
-      "font-size": LETTER_SIZE,
+      "font-size": size,
       "font-weight": 700, fill: "#f0e8d0"
     }, c.t));
   });
