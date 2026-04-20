@@ -882,19 +882,30 @@ function tempAngle(v) {
   const ticks   = document.getElementById("windTicks");
   const letters = document.getElementById("windLetters");
 
-  // Tick marks and cardinals fit INSIDE the new inner bezel (deeper face, r=132).
-  // Major markers are as chunky as the "10"-tick on the thermometer
-  // (which is a 6.5-wide parallelogram) — stroke-width 6.5, round caps.
+  // Tick marks fit INSIDE the new inner bezel (deeper face, r=132).
+  // Three-tier hierarchy:
+  //   - cardinal marks (0/90/180/270) sit under N/E/S/W and are as
+  //     chunky as the thermometer "10" tick (stroke-width 6.5).
+  //   - off-cardinal majors (30/60/120/150/210/240/300/330) are the
+  //     two markers between each pair of cardinals — deliberately
+  //     a tier smaller so the N/E/S/W read as the primary points.
+  //   - everything else (10° increments) stays thin and secondary.
   for (let deg = 0; deg < 360; deg += 10) {
-    const major = deg % 30 === 0;
+    const isCardinal  = deg % 90 === 0;            // 0, 90, 180, 270
+    const isMajor     = deg % 30 === 0;
+    const isOffMajor  = isMajor && !isCardinal;    // 30, 60, 120, 150…
+    let strokeW, innerR, op;
+    if (isCardinal)       { strokeW = 6.5; innerR = 104; op = 1;  }
+    else if (isOffMajor)  { strokeW = 3.5; innerR = 111; op = 1;  }
+    else                  { strokeW = 1;   innerR = 118; op = .7; }
     const [x1, y1] = polar(CX, CY, 124, deg);
-    const [x2, y2] = polar(CX, CY, major ? 104 : 118, deg);
+    const [x2, y2] = polar(CX, CY, innerR, deg);
     ticks.appendChild(el("line", {
       x1, y1, x2, y2,
       stroke: "#f0e8d0",
-      "stroke-width": major ? 6.5 : 1,
+      "stroke-width": strokeW,
       "stroke-linecap": "round",
-      opacity: major ? 1 : .7
+      opacity: op
     }));
   }
 
