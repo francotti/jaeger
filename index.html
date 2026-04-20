@@ -1037,9 +1037,13 @@ function getScreenRotation() {
 function applyCompassRotation() {
   if (lastHeading === null || !compassFace) return;
   const orient  = getScreenRotation();
-  // Correct the dial by subtracting the screen rotation so N keeps
+  // Correct the dial by ADDING the screen rotation so N keeps
   // pointing at true north regardless of portrait/landscape.
-  const corrected = (lastHeading - orient + 360) % 360;
+  // (On iOS webkitCompassHeading is already expressed relative to
+  // the physical top of the device, so when the page is rotated
+  // into landscape we need to add the rotation back in, not subtract
+  // it — the opposite of the initial guess.)
+  const corrected = (lastHeading + orient) % 360;
   compassFace.style.transform = `rotate(${-corrected}deg)`;
   if (headingEl) {
     headingEl.textContent = ` · HEADING ${Math.round(corrected)}°`;
