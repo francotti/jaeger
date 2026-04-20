@@ -921,8 +921,16 @@ function tempAngle(v) {
   ];
   cardinals.forEach(c => {
     const [x, y] = polar(CX, CY, 90, c.deg);
+    // Baseline offset (c.big ? 6 : 4) keeps the glyph visually
+    // centred on (x,y) — applied BEFORE rotation by shifting only
+    // the baseline via the `y` attribute.  The rotate() then spins
+    // the letter around (x, y) so the top of each glyph points
+    // radially outward from the dial centre — N reads normally, E
+    // is rotated 90° clockwise, S is upside-down, W rotated 90°
+    // counter-clockwise.  Classical ships' / Jaeger compass layout.
     letters.appendChild(el("text", {
       x, y: y + (c.big ? 6 : 4), "text-anchor": "middle",
+      transform: `rotate(${c.deg} ${x} ${y})`,
       "font-family": "Futura, 'Century Gothic', sans-serif",
       "font-size": c.big ? 17 : 10,
       "font-weight": 700, fill: "#f0e8d0"
