@@ -684,7 +684,7 @@
   </div>
 
   <footer>
-    <span id="statusLine" class="status">— CONNECTING —</span>
+    <span id="statusLine" class="status">— CONNECTING —</span><span id="headingTag" class="status"></span>
     <div class="loc-row">
       <span id="locMode"><span class="tag">LOC</span> — LOCATING —</span>
       <button id="useLocBtn" class="btn-vintage" type="button">USE LOCATION</button>
@@ -965,6 +965,7 @@ const DEFAULT_LOC = {
 let currentLoc = DEFAULT_LOC;
 
 const statusEl   = document.getElementById("statusLine");
+const headingEl  = document.getElementById("headingTag");
 const locModeEl  = document.getElementById("locMode");
 const setCityBtn = document.getElementById("setCityBtn");
 const useLocBtn  = document.getElementById("useLocBtn");
@@ -1033,6 +1034,12 @@ function onCompass(e) {
   if (heading === null || !compassFace) return;
   lastHeading = heading;
   compassFace.style.transform = `rotate(${-heading}deg)`;
+  // Live readout of the phone's compass heading in degrees.
+  // Appended to the first text line (statusLine) so it sits
+  // with the other vintage-instrument data.
+  if (headingEl) {
+    headingEl.textContent = ` · HEADING ${Math.round(heading)}°`;
+  }
 }
 
 async function enableCompass() {
