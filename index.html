@@ -914,9 +914,9 @@ function tempAngle(v) {
   const cardinals = [
     {deg:0,   t:"N",  big:true},
     {deg:45,  t:"NE"},
-    {deg:90,  t:"E",  big:true},
+    {deg:90,  t:"E",  big:true, sz:22},
     {deg:135, t:"SE"},
-    {deg:180, t:"S",  big:true},
+    {deg:180, t:"S",  big:true, sz:22},
     {deg:225, t:"SW"},
     {deg:270, t:"W",  big:true},
     {deg:315, t:"NW"}
@@ -925,10 +925,12 @@ function tempAngle(v) {
   // gap between the ticks (inner end at r≈104) and the letter tops.
   // N/E/S/W are the big primary cardinals; NE/SE/SW/NW are back to
   // their original smaller size so the hierarchy reads clearly.
+  // E and S are narrower glyphs than N/W, so they get a slightly
+  // larger explicit size to match the optical weight of N/W.
   const LETTER_R  = 80;
   cardinals.forEach(c => {
-    const size = c.big ? 19  : 10;
-    const dy   = c.big ? 6.8 : 4;
+    const size = c.sz ?? (c.big ? 19  : 10);
+    const dy   = c.big ? (c.sz ? 7.9 : 6.8) : 4;
     const [x, y] = polar(CX, CY, LETTER_R, c.deg);
     letters.appendChild(el("text", {
       x, y: y + dy, "text-anchor": "middle",
