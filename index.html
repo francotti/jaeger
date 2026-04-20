@@ -883,14 +883,16 @@ function tempAngle(v) {
   const letters = document.getElementById("windLetters");
 
   // Tick marks and cardinals fit INSIDE the new inner bezel (deeper face, r=132).
+  // Major markers are as chunky as the "10"-tick on the thermometer
+  // (which is a 6.5-wide parallelogram) — stroke-width 6.5, round caps.
   for (let deg = 0; deg < 360; deg += 10) {
     const major = deg % 30 === 0;
     const [x1, y1] = polar(CX, CY, 124, deg);
-    const [x2, y2] = polar(CX, CY, major ? 108 : 118, deg);
+    const [x2, y2] = polar(CX, CY, major ? 104 : 118, deg);
     ticks.appendChild(el("line", {
       x1, y1, x2, y2,
       stroke: "#f0e8d0",
-      "stroke-width": major ? 3 : 1,
+      "stroke-width": major ? 6.5 : 1,
       "stroke-linecap": "round",
       opacity: major ? 1 : .7
     }));
