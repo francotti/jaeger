@@ -633,6 +633,33 @@
               font-family="Futura, 'Century Gothic', sans-serif"
               font-size="9" font-weight="600" letter-spacing="1" fill="#e8dcb0">°</text>
 
+        <!-- FIXED compass arrow — points straight up, never rotates.
+             Drawn BEFORE #windLouver so the wave band visually covers
+             its lower half (same trick as the thermometer needle).
+             Pivot is at dial centre (200,200); body runs y=140 → 320,
+             so the visible top reads y=140 → ~248 above the louvres. -->
+        <g id="windArrow">
+          <!-- Cast shadow on the face to the left -->
+          <rect x="187" y="142" width="11" height="178"
+                fill="#000" opacity="0.55" filter="url(#needleShadowW)"/>
+          <!-- Solid opaque backing so the arrow is not see-through -->
+          <rect x="194" y="140" width="12" height="180" fill="#b8c2c6"/>
+          <!-- Left (shadowed) half -->
+          <polygon points="194,140 200,140 200,320 194,320"
+                   fill="url(#needleLeftW)"/>
+          <!-- Right (lit) half -->
+          <polygon points="200,140 206,140 206,320 200,320"
+                   fill="url(#needleRightW)"/>
+          <!-- Crisp central ridge hairline -->
+          <line x1="200" y1="140" x2="200" y2="320"
+                stroke="#f5f8fa" stroke-width="0.5" opacity="0.9"/>
+          <!-- Outline silhouette -->
+          <rect x="194" y="140" width="12" height="180"
+                fill="none" stroke="#2c2210" stroke-width=".4"/>
+          <!-- Pivot cap -->
+          <circle cx="200" cy="200" r="3.2" fill="#0c0804"/>
+        </g>
+
         <g id="windLouver"></g>
 
         <!-- Compass rose glyph (drawn over the waves) -->
@@ -651,36 +678,6 @@
                  filter="url(#plateBrightenW)"/>
         </g>
 
-        <!-- FIXED compass arrow — points straight up, never rotates.
-             Styled like the thermometer needle: ridged silver bar with
-             shadow on the left, lit ridge on the right, outlined and
-             pivoted at dial centre.  Because the card beneath rotates,
-             the arrow effectively picks out whichever cardinal point
-             is currently aligned with true north. -->
-        <g id="windArrow">
-          <!-- Tip moved down from y=115 to y=140 so the N letter
-               under it reads cleanly.  Arrow now runs y=140 → 200
-               (length 60, width 12) pivoted at dial centre. -->
-          <!-- Cast shadow on the face to the left -->
-          <rect x="187" y="142" width="11" height="58"
-                fill="#000" opacity="0.55" filter="url(#needleShadowW)"/>
-          <!-- Solid opaque backing so the arrow is not see-through -->
-          <rect x="194" y="140" width="12" height="60" fill="#b8c2c6"/>
-          <!-- Left (shadowed) half -->
-          <polygon points="194,140 200,140 200,200 194,200"
-                   fill="url(#needleLeftW)"/>
-          <!-- Right (lit) half -->
-          <polygon points="200,140 206,140 206,200 200,200"
-                   fill="url(#needleRightW)"/>
-          <!-- Crisp central ridge hairline -->
-          <line x1="200" y1="140" x2="200" y2="200"
-                stroke="#f5f8fa" stroke-width="0.5" opacity="0.9"/>
-          <!-- Outline silhouette -->
-          <rect x="194" y="140" width="12" height="60"
-                fill="none" stroke="#2c2210" stroke-width=".4"/>
-          <!-- Pivot cap -->
-          <circle cx="200" cy="200" r="3.2" fill="#0c0804"/>
-        </g>
       </svg>
     </div>
   </div>
