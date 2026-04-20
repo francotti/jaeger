@@ -116,16 +116,16 @@
   .btn-vintage:active,.btn-vintage:hover{background:#1f1f1f;border-color:#5a5a5a;color:#e8dcb0;}
   .build-stamp{margin-top:10px;font-size:8px;letter-spacing:.42em;color:#3f3f3f;}
   /* First-tap hint overlay for iOS compass activation.
-     Full-screen but pointer-events:none so any tap still reaches
-     the underlying buttons; the generic document-level listener
-     in autoStartCompass() catches the gesture and triggers the
-     iOS permission prompt. The overlay fades itself out once
-     the tap has been registered. */
+     Scoped to the compass dial only (not full-screen). The overlay
+     is pointer-events:none so any tap still reaches the underlying
+     buttons; the generic document-level listener in autoStartCompass()
+     catches the gesture and triggers the iOS permission prompt. The
+     overlay fades itself out once the tap has been registered. */
   .compass-hint{
-    position:fixed; inset:0;
+    position:absolute; inset:0;
     display:flex; align-items:center; justify-content:center;
     pointer-events:none;
-    z-index:1000;
+    z-index:5;
     opacity:1;
     transition: opacity .45s ease-out;
   }
@@ -710,15 +710,15 @@
         </g>
 
       </svg>
+      <!-- iOS-only compass activation hint. Positioned absolute
+           within the compass gauge so the text sits directly over
+           the compass dial, not the full screen. -->
+      <div id="compassHint" class="compass-hint" style="display:none">
+        <span id="compassHintText" class="compass-hint-text">TAP ANYWHERE TO ACTIVATE COMPASS</span>
+      </div>
     </div>
   </div>
 
-  <!-- iOS-only compass activation hint. Shown by autoStartCompass
-       until the user's first tap triggers the permission prompt.
-       Hidden entirely on non-iOS and when compass is already live. -->
-  <div id="compassHint" class="compass-hint" style="display:none">
-    <span id="compassHintText" class="compass-hint-text">TAP ANYWHERE TO ACTIVATE COMPASS</span>
-  </div>
   <footer>
     <span id="statusLine" class="status">— CONNECTING —</span><span id="headingTag" class="status"></span>
     <div class="loc-row">
