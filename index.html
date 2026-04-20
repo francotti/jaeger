@@ -626,6 +626,7 @@
     <span id="statusLine" class="status">— CONNECTING —</span>
     <div class="loc-row">
       <span id="locMode"><span class="tag">LOC</span> — LOCATING —</span>
+      <button id="useLocBtn" class="btn-vintage" type="button">USE LOCATION</button>
       <button id="setCityBtn" class="btn-vintage" type="button">SET CITY</button>
     </div>
     <div style="margin-top:6px;font-size:9px;letter-spacing:.34em;color:#5a5a5a">
@@ -881,6 +882,11 @@ let currentLoc = DEFAULT_LOC;
 const statusEl   = document.getElementById("statusLine");
 const locModeEl  = document.getElementById("locMode");
 const setCityBtn = document.getElementById("setCityBtn");
+const useLocBtn  = document.getElementById("useLocBtn");
+
+/* Last geolocation error reason (DENIED / TIMEOUT / UNAVAILABLE / null).
+   Surfaced in the LOC tag so we can see why iPhone fell back to default. */
+let lastGeoError = null;
 const tempNeedle = document.getElementById("tempNeedle");
 const windNeedle = document.getElementById("windNeedle");
 
@@ -900,10 +906,11 @@ function setStatus(msg, err=false) {
 }
 function setLocMode(loc) {
   if (!locModeEl) return;
-  const tag =
-    loc.source === "manual"  ? "MANUAL" :
-    loc.source === "auto"    ? "AUTO"   :
-                               "DEFAULT";
+  let tag;
+  if (loc.source === "manual")      tag = "MANUAL";
+  else if (loc.source === "auto")   tag = "AUTO";
+  else if (lastGeoError)            tag = lastGeoError;     // DENIED / TIMEOUT / UNAVAILABLE
+  else                              tag = "DEFAULT";
   locModeEl.innerHTML =
     `<span class="tag">LOC</span> ${tag} · ${loc.label}`;
 }
@@ -924,13 +931,30 @@ function pointWindTo(deg) {
   windNeedle.style.transform = `rotate(${deg}deg)`;
 }
 
-/* Ask the browser for a location. Resolves to {lat, lon} or null. */
-function tryGeolocation(timeoutMs = 6000) {
+/* Ask the browser for a location. Resolves to {lat, lon} or null.
+   On iOS the permission prompt is modal and users can take 10+ seconds
+   to tap "Allow", so the timeout needs to be generous. Error reason
+   is stored in `lastGeoError` so the LOC tag can show why we fell back. */
+function tryGeolocation(timeoutMs = 25000) {
   return new Promise(resolve => {
-    if (!navigator.geolocation) return resolve(null);
+    if (!navigator.geolocation) {
+      lastGeoError = "UNSUPPORTED";
+      return resolve(null);
+    }
+    lastGeoError = null;
     navigator.geolocation.getCurrentPosition(
-      p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
-      () => resolve(null),
+      p => {
+        lastGeoError = null;
+        resolve({ lat: p.coords.latitude, lon: p.coords.longitude });
+      },
+      err => {
+        lastGeoError =
+          err && err.code === 1 ? "DENIED"       :
+          err && err.code === 2 ? "UNAVAILABLE"  :
+          err && err.code === 3 ? "TIMEOUT"      :
+                                  "GEO ERROR";
+        resolve(null);
+      },
       { enableHighAccuracy: false, timeout: timeoutMs, maximumAge: 10 * 60 * 1000 }
     );
   });
@@ -1049,6 +1073,34 @@ if (setCityBtn) {
     }
     saveCity(loc);
     currentLoc = loc;
+    setLocMode(currentLoc);
+    refresh();
+  });
+}
+
+/* USE LOCATION button — a user-gesture-triggered geolocation call.
+   iOS Safari is MUCH more reliable when the permission prompt comes
+   from a tap than from automatic page-load code. Clears any stored
+   manual city so the device fix becomes the active source. */
+if (useLocBtn) {
+  useLocBtn.addEventListener("click", async () => {
+    clearSavedCity();
+    setStatus("— REQUESTING LOCATION —");
+    locModeEl.innerHTML = `<span class="tag">LOC</span> — ASKING —`;
+    const geo = await tryGeolocation();
+    if (!geo) {
+      // lastGeoError was set inside tryGeolocation
+      currentLoc = { ...DEFAULT_LOC, source: "default" };
+      setLocMode(currentLoc);
+      setStatus(`— LOCATION ${lastGeoError || "UNAVAILABLE"} —`, true);
+      refresh();
+      return;
+    }
+    const label = (await reverseGeocode(geo.lat, geo.lon))
+               || `${geo.lat.toFixed(2)}°, ${geo.lon.toFixed(2)}°`;
+    let tz = "UTC";
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch {}
+    currentLoc = { lat: geo.lat, lon: geo.lon, label, tz, source: "auto" };
     setLocMode(currentLoc);
     refresh();
   });
