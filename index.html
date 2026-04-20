@@ -895,7 +895,7 @@ function tempAngle(v) {
     const isMajor     = deg % 30 === 0;
     const isOffMajor  = isMajor && !isCardinal;    // 30, 60, 120, 150…
     let strokeW, innerR, op;
-    if (isCardinal)       { strokeW = 6.5; innerR = 104; op = 1;  }
+    if (isCardinal)       { strokeW = 6.5; innerR = 98;  op = 1;  }
     else if (isOffMajor)  { strokeW = 3.5; innerR = 111; op = 1;  }
     else                  { strokeW = 1;   innerR = 118; op = .7; }
     const [x1, y1] = polar(CX, CY, 124, deg);
