@@ -2,6 +2,10 @@
 *.bak
 *.tmp
 *~
+*.swp
+.*.swp
+*.swo
+.*.swo
 .idea/
 .vscode/
 node_modules/
