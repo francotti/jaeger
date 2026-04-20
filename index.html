@@ -1070,21 +1070,26 @@ if (screen.orientation && typeof screen.orientation.addEventListener === "functi
   screen.orientation.addEventListener("change", applyCompassRotation);
 }
 
-async function enableCompass() {
+async function enableCompass(opts = {}) {
+  // opts.silent = true suppresses the status-line chatter when this
+  // is called automatically at startup (so the weather readout is
+  // not clobbered by "COMPASS ACTIVE" messages).
+  const silent = !!opts.silent;
+  if (compassActive) return;
   if (typeof DeviceOrientationEvent === "undefined") {
-    setStatus("— COMPASS UNSUPPORTED —", true);
+    if (!silent) setStatus("— COMPASS UNSUPPORTED —", true);
     return;
   }
   try {
     if (typeof DeviceOrientationEvent.requestPermission === "function") {
       const status = await DeviceOrientationEvent.requestPermission();
       if (status !== "granted") {
-        setStatus(`— COMPASS ${status.toUpperCase()} —`, true);
+        if (!silent) setStatus(`— COMPASS ${status.toUpperCase()} —`, true);
         return;
       }
     }
   } catch (err) {
-    setStatus("— COMPASS ERROR: " + String(err.message || err).toUpperCase() + " —", true);
+    if (!silent) setStatus("— COMPASS ERROR: " + String(err.message || err).toUpperCase() + " —", true);
     return;
   }
   // Some browsers deliver absolute heading on "deviceorientationabsolute".
@@ -1092,11 +1097,42 @@ async function enableCompass() {
   window.addEventListener("deviceorientation",         onCompass, true);
   compassActive = true;
   if (useCompassBtn) useCompassBtn.textContent = "COMPASS ON";
-  setStatus("— COMPASS ACTIVE —");
+  if (!silent) setStatus("— COMPASS ACTIVE —");
 }
 if (useCompassBtn) {
-  useCompassBtn.addEventListener("click", enableCompass);
+  useCompassBtn.addEventListener("click", () => enableCompass());
 }
+
+/* ---------- Auto-start the compass at boot ----------------------
+   Non-iOS browsers don't require a user gesture, so we can attach
+   the orientation listeners immediately and the dial starts tracking
+   as soon as the page loads.
+
+   iOS Safari DOES require a user gesture to grant DeviceOrientation
+   permission. We can't bypass that, but we can piggy-back on the
+   first tap *anywhere* on the page — so the user doesn't have to
+   hunt for the USE COMPASS button. The listeners are removed as
+   soon as permission is granted (or rejected). */
+(function autoStartCompass() {
+  if (typeof DeviceOrientationEvent === "undefined") return;
+  const needsPermission =
+    typeof DeviceOrientationEvent.requestPermission === "function";
+  if (!needsPermission) {
+    // Non-iOS: hook up immediately.
+    enableCompass({ silent: true });
+    return;
+  }
+  // iOS: wait for the first user gesture, then request silently.
+  const kickoff = () => {
+    document.removeEventListener("pointerdown", kickoff, true);
+    document.removeEventListener("touchstart",  kickoff, true);
+    document.removeEventListener("click",       kickoff, true);
+    enableCompass({ silent: true });
+  };
+  document.addEventListener("pointerdown", kickoff, true);
+  document.addEventListener("touchstart",  kickoff, true);
+  document.addEventListener("click",       kickoff, true);
+})();
 
 /* Ask the browser for a location. Resolves to {lat, lon} or null.
    On iOS the permission prompt is modal and users can take 10+ seconds
