@@ -919,20 +919,20 @@ function tempAngle(v) {
     {deg:270, t:"W",  big:true},
     {deg:315, t:"NW"}
   ];
+  // Letter radius is pulled IN from the old 90 → 80, putting a clear
+  // gap between the ticks (inner end at r≈104) and the letter tops.
+  // All eight labels now render at the same size so N/E/S/W and
+  // NE/SE/SW/NW read as equal peers on the compass rose.
+  const LETTER_R    = 80;
+  const LETTER_SIZE = 19;
+  const LETTER_DY   = 6.8;   // baseline offset to centre the cap on (x,y)
   cardinals.forEach(c => {
-    const [x, y] = polar(CX, CY, 90, c.deg);
-    // Baseline offset (c.big ? 6 : 4) keeps the glyph visually
-    // centred on (x,y) — applied BEFORE rotation by shifting only
-    // the baseline via the `y` attribute.  The rotate() then spins
-    // the letter around (x, y) so the top of each glyph points
-    // radially outward from the dial centre — N reads normally, E
-    // is rotated 90° clockwise, S is upside-down, W rotated 90°
-    // counter-clockwise.  Classical ships' / Jaeger compass layout.
+    const [x, y] = polar(CX, CY, LETTER_R, c.deg);
     letters.appendChild(el("text", {
-      x, y: y + (c.big ? 6 : 4), "text-anchor": "middle",
+      x, y: y + LETTER_DY, "text-anchor": "middle",
       transform: `rotate(${c.deg} ${x} ${y})`,
       "font-family": "Futura, 'Century Gothic', sans-serif",
-      "font-size": c.big ? 17 : 10,
+      "font-size": LETTER_SIZE,
       "font-weight": 700, fill: "#f0e8d0"
     }, c.t));
   });
