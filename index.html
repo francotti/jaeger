@@ -114,6 +114,8 @@
     -webkit-tap-highlight-color:transparent;
   }
   .btn-vintage:active,.btn-vintage:hover{background:#1f1f1f;border-color:#5a5a5a;color:#e8dcb0;}
+  .btn-small{padding:4px 8px;font-size:9px;}
+  .compass-offset-row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:8px;}
   .build-stamp{margin-top:10px;font-size:8px;letter-spacing:.42em;color:#3f3f3f;}
   /* First-tap hint overlay for iOS compass activation.
      Scoped to the compass dial only (not full-screen). The overlay
@@ -727,6 +729,11 @@
       <button id="useCompassBtn" class="btn-vintage" type="button">USE COMPASS</button>
       <button id="setCityBtn" class="btn-vintage" type="button">SET CITY</button>
     </div>
+    <div class="compass-offset-row" id="compassOffsetRow" style="display:none;">
+      <span id="compassOffsetLabel" style="color:#c8b880;font-size:10px;letter-spacing:.32em;">COMPASS OFFSET <span id="compassOffsetValue">0°</span></span>
+      <button id="compassOffsetMinus" class="btn-vintage btn-small" type="button">−30°</button>
+      <button id="compassOffsetPlus" class="btn-vintage btn-small" type="button">+30°</button>
+    </div>
     <div style="margin-top:6px;font-size:9px;letter-spacing:.34em;color:#5a5a5a">
       DATA · OPEN-METEO · AUTO-REFRESH 10 MIN
     </div>
@@ -1012,8 +1019,13 @@ let lastGeoError = null;
 const tempNeedle    = document.getElementById("tempNeedle");
 const compassFace   = document.getElementById("compassFace");
 const useCompassBtn = document.getElementById("useCompassBtn");
+const compassOffsetRow = document.getElementById("compassOffsetRow");
+const compassOffsetMinus = document.getElementById("compassOffsetMinus");
+const compassOffsetPlus = document.getElementById("compassOffsetPlus");
+const compassOffsetValue = document.getElementById("compassOffsetValue");
 let   compassActive = false;
 let   lastHeading   = null;
+let   compassOffset = 0; // degrees, range -30 to +30
 
 /* Persistence for manual city override. localStorage works on
    GitHub Pages over HTTPS — survives refresh and re-launch. */
@@ -1079,7 +1091,8 @@ function applyCompassRotation() {
   // the physical top of the device, so when the page is rotated
   // into landscape we need to add the rotation back in, not subtract
   // it — the opposite of the initial guess.)
-  const corrected = (lastHeading + orient) % 360;
+  let corrected = (lastHeading + orient + compassOffset) % 360;
+  if (corrected < 0) corrected += 360;
   compassFace.style.transform = `rotate(${-corrected}deg)`;
   if (headingEl) {
     headingEl.textContent = ` · HEADING ${Math.round(corrected)}°`;
@@ -1113,6 +1126,7 @@ if (screen.orientation && typeof screen.orientation.addEventListener === "functi
    "TAP ANYWHERE TO ACTIVATE COMPASS" to the shorter "TAP TO RESUME
    COMPASS", so returning users know why the prompt is appearing. */
 const COMPASS_FLAG_KEY = "jaeger.compassGranted";
+const COMPASS_OFFSET_KEY = "jaeger.compassOffset";
 function compassWasGranted() {
   try { return localStorage.getItem(COMPASS_FLAG_KEY) === "1"; }
   catch { return false; }
@@ -1122,6 +1136,25 @@ function saveCompassGranted(v) {
     if (v) localStorage.setItem(COMPASS_FLAG_KEY, "1");
     else   localStorage.removeItem(COMPASS_FLAG_KEY);
   } catch {}
+}
+function loadCompassOffset() {
+  try {
+    const saved = localStorage.getItem(COMPASS_OFFSET_KEY);
+    if (saved !== null) {
+      compassOffset = Math.max(-30, Math.min(30, parseInt(saved, 10) || 0));
+      return;
+    }
+  } catch {}
+  compassOffset = 0;
+}
+function saveCompassOffset() {
+  try { localStorage.setItem(COMPASS_OFFSET_KEY, String(compassOffset)); }
+  catch {}
+}
+function updateCompassOffsetDisplay() {
+  if (compassOffsetValue) {
+    compassOffsetValue.textContent = (compassOffset >= 0 ? "+" : "") + compassOffset + "°";
+  }
 }
 
 const compassHintEl    = document.getElementById("compassHint");
@@ -1165,12 +1198,35 @@ async function enableCompass(opts = {}) {
   window.addEventListener("deviceorientation",         onCompass, true);
   compassActive = true;
   if (useCompassBtn) useCompassBtn.textContent = "COMPASS ON";
+  if (compassOffsetRow) compassOffsetRow.style.display = "flex";
   if (!silent) setStatus("— COMPASS ACTIVE —");
   return { success: true };
 }
 if (useCompassBtn) {
   useCompassBtn.addEventListener("click", () => enableCompass());
 }
+
+// Compass offset controls
+if (compassOffsetMinus) {
+  compassOffsetMinus.addEventListener("click", () => {
+    compassOffset = Math.max(-30, compassOffset - 1);
+    saveCompassOffset();
+    updateCompassOffsetDisplay();
+    applyCompassRotation();
+  });
+}
+if (compassOffsetPlus) {
+  compassOffsetPlus.addEventListener("click", () => {
+    compassOffset = Math.min(30, compassOffset + 1);
+    saveCompassOffset();
+    updateCompassOffsetDisplay();
+    applyCompassRotation();
+  });
+}
+
+// Initialize compass offset from storage on page load
+loadCompassOffset();
+updateCompassOffsetDisplay();
 
 /* ---------- Auto-start the compass at boot ----------------------
    Non-iOS browsers don't require a user gesture, so we can attach
