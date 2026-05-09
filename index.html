@@ -731,8 +731,8 @@
     </div>
     <div class="compass-offset-row" id="compassOffsetRow" style="display:none;">
       <span id="compassOffsetLabel" style="color:#c8b880;font-size:10px;letter-spacing:.32em;">COMPASS OFFSET <span id="compassOffsetValue">0°</span></span>
-      <button id="compassOffsetMinus" class="btn-vintage btn-small" type="button">−30°</button>
-      <button id="compassOffsetPlus" class="btn-vintage btn-small" type="button">+30°</button>
+      <button id="compassOffsetMinus" class="btn-vintage btn-small" type="button">−90°</button>
+      <button id="compassOffsetPlus" class="btn-vintage btn-small" type="button">+90°</button>
     </div>
     <div style="margin-top:6px;font-size:9px;letter-spacing:.34em;color:#5a5a5a">
       DATA · OPEN-METEO · AUTO-REFRESH 10 MIN
@@ -1025,7 +1025,7 @@ const compassOffsetPlus = document.getElementById("compassOffsetPlus");
 const compassOffsetValue = document.getElementById("compassOffsetValue");
 let   compassActive = false;
 let   lastHeading   = null;
-let   compassOffset = 0; // degrees, range -30 to +30
+let   compassOffset = 0; // degrees, range -180 to +180, steps of 90
 
 /* Persistence for manual city override. localStorage works on
    GitHub Pages over HTTPS — survives refresh and re-launch. */
@@ -1141,7 +1141,7 @@ function loadCompassOffset() {
   try {
     const saved = localStorage.getItem(COMPASS_OFFSET_KEY);
     if (saved !== null) {
-      compassOffset = Math.max(-30, Math.min(30, parseInt(saved, 10) || 0));
+      compassOffset = Math.max(-180, Math.min(180, parseInt(saved, 10) || 0));
       return;
     }
   } catch {}
@@ -1209,7 +1209,7 @@ if (useCompassBtn) {
 // Compass offset controls
 if (compassOffsetMinus) {
   compassOffsetMinus.addEventListener("click", () => {
-    compassOffset = Math.max(-30, compassOffset - 1);
+    compassOffset = Math.max(-180, compassOffset - 90);
     saveCompassOffset();
     updateCompassOffsetDisplay();
     applyCompassRotation();
@@ -1217,7 +1217,7 @@ if (compassOffsetMinus) {
 }
 if (compassOffsetPlus) {
   compassOffsetPlus.addEventListener("click", () => {
-    compassOffset = Math.min(30, compassOffset + 1);
+    compassOffset = Math.min(180, compassOffset + 90);
     saveCompassOffset();
     updateCompassOffsetDisplay();
     applyCompassRotation();
