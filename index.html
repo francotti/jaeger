@@ -496,11 +496,12 @@
         <g id="tempLouver"></g>
 
         <!-- Digital temperature readout, just above the JAEGER plate.
+             Only visible during a TEST RUN; empty otherwise.
              Drawn after the louvre band so it stays legible on top. -->
         <text id="tempDigital" x="200" y="259" text-anchor="middle"
               font-family="Futura, 'Century Gothic', sans-serif"
               font-size="9" font-weight="500" letter-spacing="1.2"
-              fill="#c8b880" opacity="0.92">—</text>
+              fill="#c8b880" opacity="0.92"></text>
 
         <!-- ============ JAEGER BRASS PLATE (higher, darker, slanted, with ribbon) ============ -->
         <g transform="translate(200,285)" filter="url(#plateShadow)">
@@ -709,10 +710,17 @@
 
         <g id="windLouver"></g>
 
+        <!-- "MADE IN FRANCE" micro-print, mirroring the thermometer dial.
+             Drawn after the louvre band and fixed needle (the needle never
+             moves on this dial, so under-needle placement would hide it). -->
+        <text x="200" y="226" text-anchor="middle"
+              font-family="Futura, 'Century Gothic', sans-serif"
+              font-size="4.2" font-weight="400" letter-spacing="0.8" fill="#c8d0d3">MADE IN FRANCE</text>
+
         <!-- Mini compass rose glyph — moved out of the louvre band
              into the upper-right quadrant, right of the fixed arrow.
              Recoloured in vintage instrument red for emphasis. -->
-        <g transform="translate(232,215)" stroke="#d14a3a" stroke-width="1" fill="none">
+        <g transform="translate(232,209)" stroke="#d14a3a" stroke-width="1" fill="none">
           <circle cx="0" cy="0" r="6.5"/>
           <polygon points="0,-6.5 1.3,0 0,6.5 -1.3,0" fill="#d14a3a"/>
           <polygon points="-6.5,0 0,1.3 6.5,0 0,-1.3" fill="#7a2018"/>
@@ -1094,7 +1102,8 @@ function pointTempTo(v, isReal = false) {
   tempNeedle.classList.toggle("cold-warn", cold);
   tempNeedle.classList.toggle("hot-warn",  hot);
   tempNeedle.classList.toggle("red-warn",  red);
-  if (isReal && typeof v === "number") {
+  /* Digital readout is a TEST RUN aid only — blank in normal operation. */
+  if (testRunActive && typeof v === "number") {
     tempDigitalEl.textContent = `${v.toFixed(1)} °C`;
   }
 }
@@ -1121,8 +1130,8 @@ function stopTestRun() {
     pointTempTo(lastLiveTemp, true);
   } else {
     pointTempTo(TEMP_MIN);
-    tempDigitalEl.textContent = "—";
   }
+  tempDigitalEl.textContent = "";
 }
 
 testRunBtn.addEventListener("click", () => {
