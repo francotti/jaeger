@@ -808,13 +808,23 @@ function drawLouver(groupId) {
 --------------------------------------------------*/
 const TEMP_MARKS = [-10, 0, 10, 20, 30];
 const TEMP_MIN = -15, TEMP_MAX = 35;
-// Needle sweep — slightly wider than before so the needle visually
-// reaches the outer numerals on the flat baseline below the ticks.
-const T_ARC_START = -44, T_ARC_END = 44;
+// Needle angle: because the numerals sit on a FLAT horizontal line
+// (not a circular arc), a linear value→angle map can never hit all of
+// them. Instead we compute the exact angle from the needle pivot
+// (200,271) to each numeral centre (numX below, y=156) and interpolate
+// piecewise-linearly between those anchors; beyond the outer marks the
+// end-segment slope is extrapolated.
+const T_ANCHOR_X   = [124, 166, 200, 238, 276];   // keep in sync with numX in drawTempDial
+const T_ANCHOR_DEG = T_ANCHOR_X.map(x => Math.atan2(x - 200, 271 - 156) * 180 / Math.PI);
 
 function tempAngle(v) {
-  const t = (v - TEMP_MIN) / (TEMP_MAX - TEMP_MIN);
-  return T_ARC_START + t * (T_ARC_END - T_ARC_START);
+  const vals = TEMP_MARKS, degs = T_ANCHOR_DEG;
+  let i;
+  if (v <= vals[0])                    i = 0;
+  else if (v >= vals[vals.length - 1]) i = vals.length - 2;
+  else { i = 0; while (v > vals[i + 1]) i++; }
+  const f = (v - vals[i]) / (vals[i + 1] - vals[i]);
+  return degs[i] + f * (degs[i + 1] - degs[i]);
 }
 
 (function drawTempDial() {
