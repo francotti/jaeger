@@ -495,6 +495,13 @@
         <!-- Drawn AFTER the needle so the waves cover the needle's lower half — deliberate Jaeger effect. -->
         <g id="tempLouver"></g>
 
+        <!-- Digital temperature readout, just above the JAEGER plate.
+             Drawn after the louvre band so it stays legible on top. -->
+        <text id="tempDigital" x="200" y="259" text-anchor="middle"
+              font-family="Futura, 'Century Gothic', sans-serif"
+              font-size="9" font-weight="500" letter-spacing="1.2"
+              fill="#c8b880" opacity="0.92">—</text>
+
         <!-- ============ JAEGER BRASS PLATE (higher, darker, slanted, with ribbon) ============ -->
         <g transform="translate(200,285)" filter="url(#plateShadow)">
           <!-- JAEGER nameplate as embedded PNG (cleaned-up reference photo),
@@ -737,6 +744,7 @@
       <button id="useLocBtn" class="btn-vintage" type="button">USE LOCATION</button>
       <button id="useCompassBtn" class="btn-vintage" type="button">USE COMPASS</button>
       <button id="setCityBtn" class="btn-vintage" type="button">SET CITY</button>
+      <button id="testRunBtn" class="btn-vintage" type="button">TEST RUN</button>
     </div>
     <div class="compass-offset-row" id="compassOffsetRow" style="display:none;">
       <span id="compassOffsetLabel" style="color:#c8b880;font-size:10px;letter-spacing:.32em;">COMPASS OFFSET <span id="compassOffsetValue">0°</span></span>
@@ -1036,6 +1044,7 @@ const useLocBtn  = document.getElementById("useLocBtn");
    Surfaced in the LOC tag so we can see why iPhone fell back to default. */
 let lastGeoError = null;
 const tempNeedle    = document.getElementById("tempNeedle");
+const tempDigitalEl = document.getElementById("tempDigital");
 const compassFace   = document.getElementById("compassFace");
 const useCompassBtn = document.getElementById("useCompassBtn");
 const compassOffsetRow = document.getElementById("compassOffsetRow");
@@ -1085,7 +1094,51 @@ function pointTempTo(v, isReal = false) {
   tempNeedle.classList.toggle("cold-warn", cold);
   tempNeedle.classList.toggle("hot-warn",  hot);
   tempNeedle.classList.toggle("red-warn",  red);
+  if (isReal && typeof v === "number") {
+    tempDigitalEl.textContent = `${v.toFixed(1)} °C`;
+  }
 }
+
+/* ---------------- TEST RUN ----------------
+   Steps the needle through real temperatures so scale alignment and
+   the warning glows can be verified. Sequence covers every numeral
+   plus each warning zone; the needle glides between steps via its
+   normal CSS transition and holds at each one. Values above 35 °C
+   show on the digital readout while the needle rests on its end stop. */
+let testRunActive = false;
+let testRunTimer  = null;
+let lastLiveTemp  = null;
+const TEST_STEPS   = [-10, 0, 10, 20, 27, 30, 33, 40];
+const TEST_HOLD_MS = 3000;
+const testRunBtn   = document.getElementById("testRunBtn");
+
+function stopTestRun() {
+  testRunActive = false;
+  clearTimeout(testRunTimer);
+  testRunTimer = null;
+  testRunBtn.textContent = "TEST RUN";
+  if (typeof lastLiveTemp === "number") {
+    pointTempTo(lastLiveTemp, true);
+  } else {
+    pointTempTo(TEMP_MIN);
+    tempDigitalEl.textContent = "—";
+  }
+}
+
+testRunBtn.addEventListener("click", () => {
+  if (testRunActive) { stopTestRun(); return; }
+  testRunActive = true;
+  testRunBtn.textContent = "STOP TEST";
+  let i = 0;
+  const step = () => {
+    if (!testRunActive) return;
+    if (i >= TEST_STEPS.length) { stopTestRun(); return; }
+    pointTempTo(TEST_STEPS[i], true);
+    i++;
+    testRunTimer = setTimeout(step, TEST_HOLD_MS);
+  };
+  step();
+});
 /* No-op: the wind dial is now a phone compass and the arrow is fixed.
    Kept as a stub so existing call-sites in refresh() don't crash.
    Wind direction still appears in the footer status line. */
@@ -1403,7 +1456,8 @@ async function refresh() {
     const d = j.current?.wind_direction_10m;
     const s = j.current?.wind_speed_10m;
     if (typeof t !== "number" || typeof d !== "number") throw new Error("Bad payload");
-    pointTempTo(t, /* isReal */ true);
+    lastLiveTemp = t;
+    if (!testRunActive) pointTempTo(t, /* isReal */ true);
     pointWindTo(d);
     const stamp = new Date().toLocaleTimeString("en-GB",
       { hour: "2-digit", minute: "2-digit" });
