@@ -82,17 +82,14 @@
     0%, 100% { opacity: 0; }
     50%      { opacity: 0.85; }
   }
-  @keyframes needleHotPulse {
-    0%, 100% { opacity: 0; }
-    50%      { opacity: 0.85; }
-  }
   .needle-cold-glow,
-  .needle-hot-glow{opacity:0;pointer-events:none;}
+  .needle-hot-glow{opacity:0;pointer-events:none;transition:opacity 1.2s ease;}
   .needle.cold-warn .needle-cold-glow{
     animation: needleColdPulse 3s ease-in-out infinite;
   }
+  /* Heat warning: steady yellow glow (no blink) above 25 °C */
   .needle.hot-warn .needle-hot-glow{
-    animation: needleHotPulse 3s ease-in-out infinite;
+    opacity: 0.85;
   }
   footer{
     margin-top:12px;font-size:11px;letter-spacing:.28em;
@@ -475,11 +472,11 @@
           <rect class="needle-cold-glow"
                 x="190" y="138" width="20" height="145"
                 fill="#f2c94c" filter="url(#coldGlowT)"/>
-          <!-- Red heat-warning glow overlay. Pulses opacity
-               via CSS animation when needle has class 'hot-warn'. -->
+          <!-- Yellow heat-warning glow overlay. Steady glow
+               when needle has class 'hot-warn' (temp > 25 °C). -->
           <rect class="needle-hot-glow"
                 x="190" y="138" width="20" height="145"
-                fill="#d64545" filter="url(#coldGlowT)"/>
+                fill="#ffd94a" filter="url(#coldGlowT)"/>
         </g>
 
         <!-- ============ LOUVRE BAND (integrated into the inner bezel) ============ -->
@@ -1052,7 +1049,7 @@ function setLocMode(loc) {
     `<span class="tag">LOC</span> ${tag} · ${loc.label}`;
 }
 const COLD_WARN_BELOW = 3;    // °C — needle blinks yellow below this
-const HOT_WARN_ABOVE  = 30;   // °C — needle blinks red above this
+const HOT_WARN_ABOVE  = 25;   // °C — needle glows yellow above this
 function pointTempTo(v, isReal = false) {
   const clamped = Math.max(TEMP_MIN, Math.min(TEMP_MAX, v));
   tempNeedle.style.transform = `rotate(${tempAngle(clamped)}deg)`;
