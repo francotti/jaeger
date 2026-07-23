@@ -808,14 +808,14 @@ function drawLouver(groupId) {
 --------------------------------------------------*/
 const TEMP_MARKS = [-10, 0, 10, 20, 30];
 const TEMP_MIN = -15, TEMP_MAX = 35;
-// Needle angle: because the numerals sit on a FLAT horizontal line
-// (not a circular arc), a linear value→angle map can never hit all of
-// them. Instead we compute the exact angle from the needle pivot
-// (200,271) to each numeral centre (numX below, y=156) and interpolate
-// piecewise-linearly between those anchors; beyond the outer marks the
-// end-segment slope is extrapolated.
-const T_ANCHOR_X   = [124, 166, 200, 238, 276];   // keep in sync with numX in drawTempDial
-const T_ANCHOR_DEG = T_ANCHOR_X.map(x => Math.atan2(x - 200, 271 - 156) * 180 / Math.PI);
+// Needle angle: because the tick markers sit on a FLAT horizontal line
+// (near-ends at y=138, not a circular arc), a linear value→angle map can
+// never hit all of them. Instead we compute the exact angle from the
+// needle pivot (200,271) to each tick's near end (tickX below, y=138)
+// and interpolate piecewise-linearly between those anchors; beyond the
+// outer marks the end-segment slope is extrapolated.
+const T_ANCHOR_X   = [132, 166, 200, 234, 268];   // keep in sync with tickX in drawTempDial
+const T_ANCHOR_DEG = T_ANCHOR_X.map(x => Math.atan2(x - 200, 271 - 138) * 180 / Math.PI);
 
 function tempAngle(v) {
   const vals = TEMP_MARKS, degs = T_ANCHOR_DEG;
