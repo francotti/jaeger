@@ -72,7 +72,7 @@
     transition:transform .35s ease-out;
   }
   /* Frost / freeze warning: when the temperature is below 3 °C,
-     a yellow glow rect inside the needle group pulses its
+     a mid-blue glow rect inside the needle group pulses its
      opacity.  Implemented with a plain SVG element + an SVG
      feGaussianBlur filter instead of CSS `filter:` on the <g>,
      because CSS filter on SVG groups is unreliable on iOS Safari.
@@ -476,11 +476,11 @@
           <rect x="194" y="140" width="12" height="141"
                 fill="none" stroke="#2c2210" stroke-width=".4"/>
           <circle cx="200" cy="271" r="3.2" fill="#0c0804"/>
-          <!-- Yellow frost-warning glow overlay. Pulses opacity
+          <!-- Mid-blue frost-warning glow overlay. Pulses opacity
                via CSS animation when needle has class 'cold-warn'. -->
           <rect class="needle-cold-glow"
                 x="190" y="138" width="20" height="145"
-                fill="#f2c94c" filter="url(#coldGlowT)"/>
+                fill="#4a90e2" filter="url(#coldGlowT)"/>
           <!-- Heat tier 1: orange pulse overlay (25–30 °C, class 'hot-warn'). -->
           <rect class="needle-hot-glow"
                 x="190" y="138" width="20" height="145"
@@ -1060,7 +1060,7 @@ function setLocMode(loc) {
   locModeEl.innerHTML =
     `<span class="tag">LOC</span> ${tag} · ${loc.label}`;
 }
-const COLD_WARN_BELOW = 3;    // °C — needle blinks yellow below this
+const COLD_WARN_BELOW = 3;    // °C — needle pulses mid blue below this
 const HOT_WARN_ABOVE  = 25;   // °C — orange pulse above this (tier 1)
 const RED_WARN_ABOVE  = 30;   // °C — red pulse above this (tier 2)
 function pointTempTo(v, isReal = false) {
