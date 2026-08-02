@@ -100,6 +100,18 @@
   .needle.red-warn .needle-red-glow{
     animation: needleHotPulse 3s ease-in-out infinite;
   }
+  /* Frost/heat telltale icons on the dial face — same pulse tiers as the
+     needle glow above, mirrored onto small static snowflake/sun icons. */
+  .frost-icon-glow, .heat-icon-glow-hot, .heat-icon-glow-red{opacity:0;pointer-events:none;}
+  .frost-icon.cold-warn .frost-icon-glow{
+    animation: needleColdPulse 3s ease-in-out infinite;
+  }
+  .heat-icon.hot-warn .heat-icon-glow-hot{
+    animation: needleHotPulse 3s ease-in-out infinite;
+  }
+  .heat-icon.red-warn .heat-icon-glow-red{
+    animation: needleHotPulse 3s ease-in-out infinite;
+  }
   footer{
     margin-top:12px;font-size:11px;letter-spacing:.28em;
     color:#7a7a7a;text-align:center;
@@ -444,6 +456,38 @@
           <ellipse cx="13" cy="-14" rx="2.5" ry="1.2" fill="none" stroke-width="1.2"/>
           <!-- Small vertical bar attached to the underside of the shaft, directly under the "0" marker -->
           <line x1="13" y1="8" x2="13" y2="11.4" stroke-width="1.6"/>
+        </g>
+
+        <!-- ============ FROST TELLTALE ICON (small snowflake, left of centre) ============ -->
+        <!-- Mirrors the analog needle's cold-warn glow with a static icon,
+             same convention as the Francotti HUD frost gauge. Drawn BEFORE
+             the needle so the needle sweeps OVER it opaquely. -->
+        <g class="frost-icon" id="frostIconT">
+          <rect class="frost-icon-glow" x="130" y="198" width="24" height="24" fill="#4a90e2" filter="url(#coldGlowT)"/>
+          <g stroke="#c8d0d3" stroke-width="2" stroke-linecap="round" fill="none">
+            <line x1="142" y1="203" x2="142" y2="217"/>
+            <line x1="149" y1="206" x2="135" y2="214"/>
+            <line x1="149" y1="214" x2="135" y2="206"/>
+          </g>
+        </g>
+
+        <!-- ============ HEAT TELLTALE ICON (small sun, right of centre) ============ -->
+        <!-- Mirrors the analog needle's hot-warn / red-warn glow tiers with
+             a static icon, same convention as the Francotti HUD frost gauge. -->
+        <g class="heat-icon" id="heatIconT" transform="translate(258,210) scale(0.8) translate(-258,-210)">
+          <rect class="heat-icon-glow-hot" x="246" y="198" width="24" height="24" fill="#ffb347" filter="url(#coldGlowT)"/>
+          <rect class="heat-icon-glow-red" x="246" y="198" width="24" height="24" fill="#d64545" filter="url(#coldGlowT)"/>
+          <g stroke="#c8d0d3" stroke-width="2" stroke-linecap="round" fill="none">
+            <circle cx="258" cy="210" r="5"/>
+            <line x1="258" y1="199" x2="258" y2="202"/>
+            <line x1="258" y1="218" x2="258" y2="221"/>
+            <line x1="247" y1="210" x2="250" y2="210"/>
+            <line x1="266" y1="210" x2="269" y2="210"/>
+            <line x1="250.7" y1="202.7" x2="252.8" y2="204.8"/>
+            <line x1="263.2" y1="215.2" x2="265.3" y2="217.3"/>
+            <line x1="250.7" y1="217.3" x2="252.8" y2="215.2"/>
+            <line x1="263.2" y1="204.8" x2="265.3" y2="202.7"/>
+          </g>
         </g>
 
         <!-- ============ "MADE IN FRANCE" micro-print (just above the wave band) ============ -->
@@ -1053,6 +1097,8 @@ const useLocBtn  = document.getElementById("useLocBtn");
 let lastGeoError = null;
 const tempNeedle    = document.getElementById("tempNeedle");
 const tempDigitalEl = document.getElementById("tempDigital");
+const frostIconT    = document.getElementById("frostIconT");
+const heatIconT     = document.getElementById("heatIconT");
 const compassFace   = document.getElementById("compassFace");
 const useCompassBtn = document.getElementById("useCompassBtn");
 const compassOffsetRow = document.getElementById("compassOffsetRow");
@@ -1102,6 +1148,9 @@ function pointTempTo(v, isReal = false) {
   tempNeedle.classList.toggle("cold-warn", cold);
   tempNeedle.classList.toggle("hot-warn",  hot);
   tempNeedle.classList.toggle("red-warn",  red);
+  frostIconT.classList.toggle("cold-warn", cold);
+  heatIconT.classList.toggle("hot-warn",  hot);
+  heatIconT.classList.toggle("red-warn",  red);
   /* Digital readout is a TEST RUN aid only — blank in normal operation. */
   if (testRunActive && typeof v === "number") {
     tempDigitalEl.textContent = `${v.toFixed(1)} °C`;
