@@ -22,7 +22,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="2026-04-20-0018">
+<meta name="build" content="2026-08-02-0001">
 
 <style>
   html,body{margin:0;height:100%;}
@@ -462,7 +462,7 @@
         <!-- Mirrors the analog needle's cold-warn glow with a static icon,
              same convention as the Francotti HUD frost gauge. Drawn BEFORE
              the needle so the needle sweeps OVER it opaquely. -->
-        <g class="frost-icon" id="frostIconT">
+        <g class="frost-icon" id="frostIconT" transform="translate(128,210) scale(0.6) translate(-142,-210)">
           <rect class="frost-icon-glow" x="130" y="198" width="24" height="24" fill="#4a90e2" filter="url(#coldGlowT)"/>
           <g stroke="#c8d0d3" stroke-width="2" stroke-linecap="round" fill="none">
             <line x1="142" y1="203" x2="142" y2="217"/>
@@ -474,7 +474,7 @@
         <!-- ============ HEAT TELLTALE ICON (small sun, right of centre) ============ -->
         <!-- Mirrors the analog needle's hot-warn / red-warn glow tiers with
              a static icon, same convention as the Francotti HUD frost gauge. -->
-        <g class="heat-icon" id="heatIconT" transform="translate(258,210) scale(0.8) translate(-258,-210)">
+        <g class="heat-icon" id="heatIconT" transform="translate(272,210) scale(0.48) translate(-258,-210)">
           <rect class="heat-icon-glow-hot" x="246" y="198" width="24" height="24" fill="#ffb347" filter="url(#coldGlowT)"/>
           <rect class="heat-icon-glow-red" x="246" y="198" width="24" height="24" fill="#d64545" filter="url(#coldGlowT)"/>
           <g stroke="#c8d0d3" stroke-width="2" stroke-linecap="round" fill="none">
@@ -806,7 +806,7 @@
     <div style="margin-top:6px;font-size:9px;letter-spacing:.34em;color:#5a5a5a">
       DATA · OPEN-METEO · AUTO-REFRESH 10 MIN
     </div>
-    <div class="build-stamp" id="buildStamp">BUILD 2026-04-20-0018</div>
+    <div class="build-stamp" id="buildStamp">BUILD 2026-08-02-0001</div>
   </footer>
   <!-- Permanent AWAKE status tag — stays visible even after the
        footer auto-hides, so you can see whether the screen lock
