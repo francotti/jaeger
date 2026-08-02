@@ -22,7 +22,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="build" content="2026-08-02-0001">
+<meta name="build" content="2026-08-02-0002">
 
 <style>
   html,body{margin:0;height:100%;}
@@ -101,7 +101,11 @@
     animation: needleHotPulse 3s ease-in-out infinite;
   }
   /* Frost/heat telltale icons on the dial face — same pulse tiers as the
-     needle glow above, mirrored onto small static snowflake/sun icons. */
+     needle glow above, mirrored onto small static snowflake/sun icons.
+     Hidden by default; shown only when body has .show-temp-icons
+     (toggled via the SHOW TEMP ICONS footer button, persisted). */
+  .frost-icon, .heat-icon{display:none;}
+  body.show-temp-icons .frost-icon, body.show-temp-icons .heat-icon{display:inline;}
   .frost-icon-glow, .heat-icon-glow-hot, .heat-icon-glow-red{opacity:0;pointer-events:none;}
   .frost-icon.cold-warn .frost-icon-glow{
     animation: needleColdPulse 3s ease-in-out infinite;
@@ -797,6 +801,7 @@
       <button id="useCompassBtn" class="btn-vintage" type="button">USE COMPASS</button>
       <button id="setCityBtn" class="btn-vintage" type="button">SET CITY</button>
       <button id="testRunBtn" class="btn-vintage" type="button">TEST RUN</button>
+      <button id="showTempIconsBtn" class="btn-vintage" type="button">SHOW TEMP ICONS</button>
     </div>
     <div class="compass-offset-row" id="compassOffsetRow" style="display:none;">
       <span id="compassOffsetLabel" style="color:#c8b880;font-size:10px;letter-spacing:.32em;">COMPASS OFFSET <span id="compassOffsetValue">0°</span></span>
@@ -806,7 +811,7 @@
     <div style="margin-top:6px;font-size:9px;letter-spacing:.34em;color:#5a5a5a">
       DATA · OPEN-METEO · AUTO-REFRESH 10 MIN
     </div>
-    <div class="build-stamp" id="buildStamp">BUILD 2026-08-02-0001</div>
+    <div class="build-stamp" id="buildStamp">BUILD 2026-08-02-0002</div>
   </footer>
   <!-- Permanent AWAKE status tag — stays visible even after the
        footer auto-hides, so you can see whether the screen lock
@@ -1099,6 +1104,7 @@ const tempNeedle    = document.getElementById("tempNeedle");
 const tempDigitalEl = document.getElementById("tempDigital");
 const frostIconT    = document.getElementById("frostIconT");
 const heatIconT     = document.getElementById("heatIconT");
+const showTempIconsBtn = document.getElementById("showTempIconsBtn");
 const compassFace   = document.getElementById("compassFace");
 const useCompassBtn = document.getElementById("useCompassBtn");
 const compassOffsetRow = document.getElementById("compassOffsetRow");
@@ -1337,6 +1343,35 @@ async function enableCompass(opts = {}) {
 }
 if (useCompassBtn) {
   useCompassBtn.addEventListener("click", () => enableCompass());
+}
+
+/* Frost/heat telltale icons on the temp dial are optional and OFF by
+   default — persisted the same way as the compass grant flag above. */
+const SHOW_TEMP_ICONS_KEY = "jaeger.showTempIcons";
+function loadShowTempIcons() {
+  try { return localStorage.getItem(SHOW_TEMP_ICONS_KEY) === "1"; }
+  catch { return false; }
+}
+function saveShowTempIcons(v) {
+  try {
+    if (v) localStorage.setItem(SHOW_TEMP_ICONS_KEY, "1");
+    else   localStorage.removeItem(SHOW_TEMP_ICONS_KEY);
+  } catch {}
+}
+let showTempIcons = loadShowTempIcons();
+function applyShowTempIcons() {
+  document.body.classList.toggle("show-temp-icons", showTempIcons);
+  if (showTempIconsBtn) {
+    showTempIconsBtn.textContent = showTempIcons ? "TEMP ICONS ON" : "SHOW TEMP ICONS";
+  }
+}
+applyShowTempIcons();
+if (showTempIconsBtn) {
+  showTempIconsBtn.addEventListener("click", () => {
+    showTempIcons = !showTempIcons;
+    saveShowTempIcons(showTempIcons);
+    applyShowTempIcons();
+  });
 }
 
 // Compass offset controls
